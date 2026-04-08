@@ -6,6 +6,11 @@
 <title>IDIEM — Generador de Propuestas</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
+  /* ============================================================
+     CONFIGURACIÓN OLLAMA
+     Si cambiaste el puerto de Ollama, edita OLLAMA_URL.
+     Si quieres usar otro modelo, edita OLLAMA_MODEL.
+     ============================================================ */
   :root {
     --ollama-url: "http://localhost:11434";
     /* Modelos recomendados según tu RAM:
@@ -760,17 +765,10 @@
         <div class="result-box">
           <div class="result-text" id="result-text"></div>
         </div>
-
-        <!-- Estado descarga Word -->
-        <div id="word-status" style="display:none; margin-top:1rem; font-size:12px; color: var(--text-muted); font-family: var(--mono);"></div>
-
         <div class="btn-row">
           <button class="btn-ghost" onclick="nuevaPropuesta()">← Nueva propuesta</button>
           <div style="display:flex;gap:8px;">
             <button class="btn" onclick="copiarTexto()">Copiar texto</button>
-            <button class="btn btn-primary" id="btn-word" onclick="descargarWord()">
-              Descargar Word →
-            </button>
           </div>
         </div>
       </div>
@@ -789,107 +787,14 @@
 
 <script>
   // ============================================================
-  // CONFIGURACIÓN OLLAMA
+  // CONFIGURACIÓN — edita esto si necesitas cambiar algo
   // ============================================================
   const OLLAMA_URL = 'http://localhost:11434';
   const OLLAMA_MODEL = 'mistral-small3.1';
+  // Si usas otro modelo, cámbialo aquí. Opciones:
   // 'llama3.1:8b'     → más rápido, menos RAM
   // 'mistral:7b'      → alternativa liviana
   // 'mistral-small3.1' → mejor calidad (recomendado con 32GB)
-
-  // ============================================================
-  // CONFIGURACIÓN SERVIDOR FLASK
-  // ============================================================
-  const SERVER_URL = 'http://localhost:5050';
-
-  // ============================================================
-  // VERIFICAR CONEXIÓN CON OLLAMA Y SERVIDOR AL CARGAR
-  // ============================================================
-  async function checkServer() {
-    try {
-      const r = await fetch(`${SERVER_URL}/health`, { signal: AbortSignal.timeout(2000) });
-      const data = await r.json();
-      if (data.status === 'ok') {
-        document.getElementById('status-model').textContent += ' · servidor ✓';
-      }
-    } catch {
-      document.getElementById('status-model').textContent += ' · servidor Flask no detectado';
-    }
-  }
-
-  // ============================================================
-  // DESCARGAR WORD AUTOMÁTICAMENTE
-  // ============================================================
-  async function descargarWord() {
-    const texto = document.getElementById('result-text').textContent;
-    const btn = document.getElementById('btn-word');
-    const statusEl = document.getElementById('word-status');
-
-    if (!texto) return;
-
-    btn.disabled = true;
-    btn.textContent = 'Generando Word...';
-    statusEl.style.display = 'block';
-    statusEl.textContent = 'Conectando con servidor Flask...';
-
-    // Recopilar datos del formulario para la portada
-    const datosFormulario = {
-      cliente:    v('cliente'),
-      contacto:   v('contacto'),
-      edificio:   v('edificio'),
-      direccion:  v('direccion'),
-      codigo:     v('codigo') || 'PR.DEP.2025.XXXX',
-      revision:   v('revision') || 'Rev. N°1',
-      fecha:      v('fecha') || new Date().toLocaleDateString('es-CL'),
-      elaborado:  v('elaborado'),
-      revisado:   v('revisado') || 'Guillermo Sierra R.',
-    };
-
-    try {
-      statusEl.textContent = 'Rellenando template Word...';
-
-      const response = await fetch(`${SERVER_URL}/generar-word`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tipo: 'diagnostico',
-          texto: texto,
-          formulario: datosFormulario
-        })
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'Error del servidor');
-      }
-
-      // Descargar el archivo
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const edificio = v('edificio').replace(/\s+/g, '_') || 'propuesta';
-      const codigo = (v('codigo') || 'PR_DEP_2025_XXXX').replace(/\./g, '_');
-      a.href = url;
-      a.download = `${codigo}_${edificio}.docx`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      statusEl.textContent = '✓ Word descargado correctamente';
-      setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
-
-    } catch (err) {
-      let msg = err.message;
-      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-        msg = 'No se pudo conectar con el servidor Flask. ' +
-              'Asegúrate de tener server.py corriendo: python server.py';
-      }
-      statusEl.textContent = '✗ ' + msg;
-      statusEl.style.color = 'var(--accent)';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Descargar Word →';
-    }
-  }
 
   // ============================================================
   // VERIFICAR CONEXIÓN CON OLLAMA AL CARGAR
@@ -915,7 +820,6 @@
     }
   }
   checkOllama();
-  checkServer();
 
   // ============================================================
   // NAVEGACIÓN ENTRE PASOS
@@ -1082,6 +986,10 @@ Usa un tono técnico formal, párrafos bien estructurados, sin lenguaje genéric
     try {
       // ============================================================
       // LLAMADA A OLLAMA
+      // Si en el futuro integras n8n, este fetch es el que reemplazas
+      // por un webhook de n8n: fetch('http://localhost:5678/webhook/propuesta', ...)
+      // n8n recibe los datos, llama a Ollama, y puede además crear el
+      // Word y subirlo a Drive automáticamente.
       // ============================================================
       const response = await fetch(`${OLLAMA_URL}/api/chat`, {
         method: 'POST',
