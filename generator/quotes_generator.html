@@ -6,6 +6,9 @@
 <title>IDIEM — Generador de Propuestas</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
+  /* ============================================================
+     CONFIGURACIÓN OLLAMA
+     ============================================================ */
   :root {
     --ollama-url: "http://localhost:11434";
     /* Modelos recomendados según tu RAM:
@@ -789,16 +792,17 @@
 
 <script>
   // ============================================================
-  // CONFIGURACIÓN OLLAMA
+  // CONFIGURACIÓN — edita esto si necesitas cambiar algo
   // ============================================================
   const OLLAMA_URL = 'http://localhost:11434';
-  const OLLAMA_MODEL = 'mistral-small3.1';
+  const OLLAMA_MODEL = 'llama3.3:70b'; //'mistral-small3.1';
   // 'llama3.1:8b'     → más rápido, menos RAM
   // 'mistral:7b'      → alternativa liviana
   // 'mistral-small3.1' → mejor calidad (recomendado con 32GB)
 
   // ============================================================
   // CONFIGURACIÓN SERVIDOR FLASK
+  // Si cambiaste el puerto en server.py, edítalo aquí también.
   // ============================================================
   const SERVER_URL = 'http://localhost:5050';
 
@@ -818,6 +822,38 @@
   }
 
   // ============================================================
+  // RECOPILAR DATOS DEL FORMULARIO (función centralizada)
+  // ============================================================
+  function recopilarFormulario() {
+    return {
+      cliente:      v('cliente'),
+      contacto:     v('contacto'),
+      edificio:     v('edificio'),
+      direccion:    v('direccion'),
+      superficie:   v('superficie'),
+      anio:         v('anio'),
+      pisos:        v('pisos'),
+      materialidad: getTags('tags-materialidad').join(', '),
+      condicion:    getTags('tags-condicion').join(', '),
+      motivacion:   v('motivacion'),
+      obs_tecnicas: v('obs_tecnicas'),
+      actividades:  getChecked(),
+      plazo_terreno:  v('plazo_terreno'),
+      plazo_gabinete: v('plazo_gabinete'),
+      plazo_total:    v('plazo_total'),
+      precio_uf:    v('precio_uf'),
+      forma_pago:   document.getElementById('forma_pago')?.value || '50_inicio',
+      detalle_pago: v('detalle_pago'),
+      exclusiones:  v('exclusiones'),
+      codigo:       v('codigo') || 'PR.DEP.2025.XXXX',
+      revision:     v('revision') || 'Rev. N°1',
+      fecha:        v('fecha') || new Date().toLocaleDateString('es-CL'),
+      elaborado:    v('elaborado'),
+      revisado:     v('revisado') || 'Guillermo Sierra R.',
+    };
+  }
+
+  // ============================================================
   // DESCARGAR WORD AUTOMÁTICAMENTE
   // ============================================================
   async function descargarWord() {
@@ -833,17 +869,7 @@
     statusEl.textContent = 'Conectando con servidor Flask...';
 
     // Recopilar datos del formulario para la portada
-    const datosFormulario = {
-      cliente:    v('cliente'),
-      contacto:   v('contacto'),
-      edificio:   v('edificio'),
-      direccion:  v('direccion'),
-      codigo:     v('codigo') || 'PR.DEP.2025.XXXX',
-      revision:   v('revision') || 'Rev. N°1',
-      fecha:      v('fecha') || new Date().toLocaleDateString('es-CL'),
-      elaborado:  v('elaborado'),
-      revisado:   v('revisado') || 'Guillermo Sierra R.',
-    };
+    const datosFormulario = recopilarFormulario();
 
     try {
       statusEl.textContent = 'Rellenando template Word...';
@@ -1080,19 +1106,39 @@ Usa un tono técnico formal, párrafos bien estructurados, sin lenguaje genéric
     }, 4000);
 
     try {
-      // ============================================================
-      // LLAMADA A OLLAMA
-      // ============================================================
+      // PASO 1 — Pedir el prompt al servidor Flask
+      // El servidor lee prompts/diagnostico.txt, inserta los datos y lo devuelve
+      msgEl.textContent = 'Cargando prompt con ejemplos...';
+      const promptRes = await fetch(`${SERVER_URL}/construir-prompt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipo: 'diagnostico',
+          formulario: recopilarFormulario()
+        })
+      });
+
+      if (!promptRes.ok) {
+        const err = await promptRes.json();
+        throw new Error('Error del servidor: ' + (err.error || promptRes.status));
+      }
+
+      const { prompt } = await promptRes.json();
+      msgEl.textContent = 'Enviando a Ollama...';
+
+      // PASO 2 — Enviar el prompt a Ollama
+      // Si en el futuro integras n8n, reemplaza este fetch por:
+      // fetch('http://localhost:5678/webhook/propuesta', ...)
       const response = await fetch(`${OLLAMA_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: OLLAMA_MODEL,
-          messages: [{ role: 'user', content: buildPrompt() }],
+          messages: [{ role: 'user', content: prompt }],
           stream: false,
           options: {
-            temperature: 0.3,   // Bajo = más consistente y formal
-            num_predict: 4096   // Tokens máximos de respuesta
+            temperature: 0.2,   // Bajo = más consistente y formal
+            num_predict: 4096 //8192   // Más tokens para respuestas largas con few-shot
           }
         })
       });
