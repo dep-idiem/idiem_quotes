@@ -1,0 +1,121 @@
+El usuario te enviará datos de un proyecto de diagnóstico estructural.
+Antes de redactar, analiza internamente lo siguiente (no incluyas este análisis en la respuesta):
+
+- Las actividades seleccionadas son coherentes con la materialidad, antigüedad y condición del edificio?
+- Falta alguna actividad obvia? Si el edificio tiene más de 70 años considera exploración de fundaciones. Si es Monumento Histórico, los ensayos destructivos en albañilería requieren permiso del CMN.
+- Hay inconsistencias evidentes entre los datos? Adáptalas razonablemente.
+- El precio es coherente con el alcance y superficie declarados?
+- Hay campos vacíos o con "No indicado"? Usa lenguaje genérico apropiado o infiere un valor razonable.
+
+Reglas de formato dentro de cada campo del JSON:
+
+1. Usa \n para separar párrafos y líneas.
+2. En "alcance": párrafo introductorio con cliente, contacto y descripción del edificio. Luego listado de actividades numerado, cada una en línea separada. Luego antecedentes que debe proveer el mandante, con guión cada uno.
+3. En "propuesta_tecnica": cada actividad con su propio subtítulo numerado (2.1, 2.2, etc.) seguido de un párrafo descriptivo de al menos 3 líneas. Nunca pongas todo en un solo bloque de texto.
+4. En "plazos": solo tabla simple de dos filas (terreno y gabinete) seguida de notas con guión. Sin desglose por actividad.
+5. En "propuesta_economica": valor en UF, exención IVA citando artículo 40 Ley N° 21.094 y Oficio N° 1.216 del SII, forma de pago y condición crédito 30 días.
+6. En "recursos": lista con guión, no numerada.
+7. En "exclusiones": lista con guión sin repetir items. Siempre incluye: asesor en prevención de riesgos de IDIEM en terreno, reparaciones de zonas prospectadas, limpieza y retiro de escombros, elaboración de proyectos de intervención estructural.
+
+===================================================================
+EJEMPLOS DE REFERENCIA - SOLO PARA APRENDER EL ESTILO
+===================================================================
+
+Los siguientes ejemplos son propuestas reales de IDIEM. Aprende su tono, nivel de detalle y estructura. NO uses ningún dato de estos ejemplos en tu respuesta.
+
+-------------------------------------------------------------------
+EJEMPLO 1 - Instituto Traumatológico
+-------------------------------------------------------------------
+
+Datos de entrada del ejemplo:
+Cliente: Instituto Traumatológico
+Edificio: Instituto Traumatológico Dr. Teodoro Gebauer Weisser
+Dirección: San Martín 771, Santiago
+Superficie: 7500 m2, más de 70 años de antigüedad
+Materialidad: Mixta hormigón armado y albañilería, planta en L
+Condición: En uso
+Actividades: Escáner láser 3D, martillo Schmidt, testigos de hormigón, georradar, picados locales, barras de acero, 4 calicatas, vibraciones ambientales, modelación ETABS/SAP2000, evaluación estructural, propuesta de reparación
+Precio: UF 1390, 50% inicio 50% entrega informe
+Plazos: 25 días hábiles terreno, 25 días hábiles gabinete
+
+Respuesta de referencia del ejemplo:
+{
+  "alcance": "De acuerdo con lo solicitado por la Sra. Carmina Ponce de la Subdirección de Desarrollo Estratégico y Gestión de Información en representación del Instituto Traumatológico, se presenta la propuesta técnica y económica de la evaluación estructural del Instituto Traumatológico Dr. Teodoro Gebauer Weisser, ubicado en la calle San Martín 771, Comuna de Santiago, Región Metropolitana.\n\nEl edificio a inspeccionar corresponde a una estructura mixta de hormigón armado y albañilería, con una planta en L, que cuenta con cinco pisos más dos subterráneos con una superficie construida de 7.500 m2 aproximadamente y una data de más de 70 años de antigüedad. Cabe destacar que el edificio a evaluar se encuentra en uso.\n\nPara el desarrollo del estudio, IDIEM considera la ejecución de las siguientes actividades:\n1. Revisión de antecedentes\n2. Levantamiento dimensional y estructuración de elementos estructurales\n3. Verificación de materialidad\n4. Levantamiento estado actual\n5. Exploración en elementos de hormigón armado\n6. Exploración de fundaciones\n7. Medición de vibraciones ambientales\n8. Análisis estructural\n9. Evaluación estructural\n10. Propuesta de reparación y/o refuerzo de la estructura\n\nPara lo anterior, es necesario que el mandante proporcione los siguientes antecedentes:\n- Mecánica de suelos de la zona de estudio\n- Informes previos de inspecciones, visitas técnicas y reparaciones, en caso de su disponibilidad\n- Memorias de cálculo, en caso de su disponibilidad\n- Antecedentes de intervenciones previas de la estructura",
+
+  "propuesta_tecnica": "2.1 Revisión de antecedentes\n\nSe realizará la revisión de los antecedentes que se encuentren disponibles, suministrados por el mandante, tales como mecánica de suelos, informes previos de inspecciones, visitas técnicas y reparaciones, memorias de cálculo y antecedentes de intervenciones previas de la estructura.\n\n2.2 Levantamiento dimensional y estructuración de elementos estructurales\n\nCon el objetivo de obtener la geometría actual de la estructura a evaluar, se realizará un levantamiento dimensional mediante el equipo escáner láser Faro Focus 3D. A partir de los datos registrados en terreno, se procesará la información digital recopilada para obtener una nube de puntos de la estructura. Esto permitirá generar secciones transversales y cortes para analizar la geometría en diferentes puntos, incluyendo las deformaciones existentes en puntos estratégicos. Se verificarán las dimensiones principales de los elementos para compararlas con la información de los planos disponibles.\n\n2.3 Verificación de materialidad\n\nCon el objetivo de caracterizar la estructura del inmueble, se realizará un reconocimiento de la materialidad de sus principales elementos estructurales mediante observación in situ y, de ser necesario, picados locales y perforaciones con taladro. Los puntos de registro serán evaluados y seleccionados según criterio de IDIEM.\n\n2.4 Levantamiento estado actual\n\nSe realizará un levantamiento del estado actual de los elementos estructurales a la vista del edificio. Se identificarán daños en los elementos estructurales existentes, tales como fisuras, grietas, pérdida de recubrimientos y armaduras a la vista. La inspección será complementada mediante un registro fotográfico de los daños detectados y un registro esquemático de los mismos.\n\n2.5 Exploración en elementos de hormigón armado\n\n2.5.1 Ensayos de dureza superficial mediante martillo Schmidt\n\nSe considera la ejecución de ensayos de dureza superficial del hormigón mediante martillo Schmidt, el cual es un buen indicador de una posible alteración de su resistencia y permite determinar si el material es homogéneo.\n\n2.5.2 Extracción y ensayo de testigos de hormigón\n\nCon la finalidad de determinar la resistencia a la compresión del hormigón de la estructura en estudio, se extraerán y ensayarán testigos de hormigón en zonas que no afecten el comportamiento de la estructura. La ubicación de las extracciones quedará a criterio de IDIEM. Este tipo de prospección requiere inyección de agua para enfriar la broca de perforación, por lo que el mandante debe tomar las precauciones para evitar daños en materiales y elementos del sector.\n\n2.5.3 Determinación del espaciamiento de armaduras mediante georradar\n\nSe determinará el espaciamiento de la armadura superficial con un equipo Georradar en zonas de máximo 1 m2. La profundidad máxima de resolución del equipo es de 40 cm. Este ensayo no permite determinar el diámetro de las armaduras identificadas, por lo que debe ser complementado mediante picados locales.\n\n2.5.4 Determinación del diámetro de armaduras mediante picados locales\n\nSe realizarán picados locales de dimensión aproximada 20 cm x 20 cm para exponer la armadura de refuerzo del hormigón, registrando en terreno el diámetro de las barras más próximas a la superficie intervenida y el recubrimiento respectivo.\n\n2.5.5 Extracción y ensayo a tracción de barras de acero\n\nCon el fin de determinar la calidad de la armadura de refuerzo, se extraerán barras de acero de los elementos de hormigón armado en zonas que no afecten el comportamiento de la estructura, para luego ser ensayadas bajo la Norma NCh200: Productos Metálicos - Ensayo de Tracción.\n\n2.6 Exploración de fundaciones\n\nPara el levantamiento de las fundaciones, se contemplan 4 calicatas con el propósito de obtener sus dimensiones y características geométricas. En los sectores correspondientes a niveles subterráneos, se realizarán las calicatas desde el interior, considerando la rotura localizada de la losa o radier de aproximadamente 1 m x 1,5 m.\n\n2.7 Medición de vibraciones ambientales\n\nSe medirán las vibraciones ambientales de la estructura mediante acelerómetros, para determinar sus periodos fundamentales y frecuencias de vibración, y comparar esta información con la obtenida a partir del modelo computacional de la estructura.\n\n2.8 Análisis estructural\n\nSe realizará un modelo computacional de la estructura en estudio con un software de análisis de elementos finitos (SAP2000 o ETABS). A partir de esta modelación, se realizará un análisis estructural del edificio tomando como referencia los datos obtenidos en terreno, la información proporcionada por el mandante y lo dispuesto en la normativa chilena actual, con el objetivo de determinar las solicitaciones de los elementos estructurales, tanto estáticas como sísmicas, así como los niveles de deformación.\n\n2.9 Evaluación estructural\n\nEn base a los trabajos realizados, se llevará a cabo una evaluación estructural del estado actual del inmueble en estudio. A partir de lo anterior se definirá la necesidad de efectuar reparaciones y/o refuerzos.\n\n2.10 Propuesta de reparación y/o refuerzo de la estructura\n\nEn base a la evaluación, se realizará una propuesta de reparación y/o refuerzo de la estructura a nivel de ingeniería conceptual, que incluirá especificaciones técnicas generales de las reparaciones y refuerzos que se deben ejecutar, explicadas por medio de esquemas ilustrativos.\n\n2.11 Entregables\n\n- Informe de diagnóstico con resultados de la evaluación estructural y proyecto de reparación a nivel conceptual\n- Modelos estructurales en formato nativo (SAP2000/ETABS/SAFE)\n- Set de planos de forma con planimetría de forma y materialidad del edificio en su condición actual",
+
+  "plazos": "Etapa | Plazo\nTrabajos en terreno | 25 días hábiles como máximo\nTrabajos en oficina | 25 días hábiles, contados del día hábil siguiente al término de todos los trabajos en terreno\n\n- El plazo de ejecución de los trabajos en terreno contempla que el mandante dará de forma oportuna todas las facilidades de acceso, asegurando el despeje y limpieza de las zonas a inspeccionar o prospectar\n- Los trabajos en terreno se programarán una vez formalizada la aceptación de este presupuesto, con una antelación de al menos 5 días hábiles",
+
+  "propuesta_economica": "El valor del servicio es de UF 1.390. De acuerdo con lo dispuesto en el artículo 40 de la Ley N° 21.094 Sobre Universidades Estatales y el Oficio N° 1.216, de 19.04.2023 del Servicio de Impuestos Internos, los servicios aquí ofertados se encuentran exentos de IVA.\n\nSe deberá aceptar formalmente la presente propuesta mediante el envío de una Orden de Compra y/o la elaboración de un contrato.\n\nForma de pago: Adelanto del 50% del valor total del servicio al momento de aceptarlo y pago del saldo junto con la entrega del informe.\n\nCondición de pago: Crédito 30 días.",
+
+  "recursos": "Para cumplir con los objetivos propuestos, el cliente deberá proveer de los siguientes recursos:\n\n- Instalación de andamios o equipo alzahombre con operador, en caso de requerirse\n- Energía 220 V, agua y servicios básicos en terreno\n- Permisos y coordinaciones necesarias para el acceso oportuno del personal",
+
+  "exclusiones": "La presente propuesta no contempla lo siguiente:\n\n- Asesor en prevención de riesgo de IDIEM en terreno\n- Instalación de andamios o equipo alzahombre\n- Reparaciones de zonas prospectadas\n- Limpieza, retiro de escombros o de elementos\n- Proyecto de refuerzo o reparación estructural detallado"
+}
+
+-------------------------------------------------------------------
+EJEMPLO 2 - APS Hospital San José de Maipo
+-------------------------------------------------------------------
+
+Datos de entrada del ejemplo:
+Cliente: Servicio de Salud Metropolitano Sur Oriente (SSMSO)
+Contacto: Bárbara León
+Edificio: APS Hospital San José de Maipo
+Dirección: Intersección Madre Paula Montal y Del Cerro, San José de Maipo, RM
+Superficie: 1110 m2, año construcción 1935
+Condición: Valor patrimonial, regularización DOM, construcción anterior a 1959
+Actividades: Inspección daños (con dron), materialidad (martillo Schmidt, pacómetro, picados), escáner láser 3D, testigos hormigón (3 a 5), barras acero (máx 2), albañilería visual, ensayos geofísicos MASW/ReMi (2), modelación ETABS, diagnóstico estructural, firma profesional DOM
+Precio: UF 1450, 50% término terreno 50% entrega informe
+Plazos: 20 días corridos terreno, 70 días corridos gabinete
+
+Respuesta de referencia del ejemplo:
+{
+  "alcance": "De acuerdo con lo solicitado por Bárbara León, en representación del Servicio de Salud Metropolitano Sur Oriente (SSMSO), se presenta la propuesta técnica y económica por el Diagnóstico estructural del APS Hospital San José de Maipo, ubicado en la intersección de las calles Madre Paula Montal y Del Cerro, comuna de San José de Maipo, Región Metropolitana.\n\nLa estructura en estudio se compone de dos cuerpos principales, denominados A y B. El Cuerpo A presenta dos niveles sobre rasante y un nivel subterráneo, mientras que el Cuerpo B corresponde a una edificación de un solo nivel. Ambos cuerpos están conformados principalmente por elementos de hormigón armado y albañilería. La edificación posee una superficie construida aproximada de 1.110 m2 y presenta un valor de interés histórico y artístico, por lo que su evaluación y eventual intervención deberán considerar criterios de conservación patrimonial.\n\nDebido a la necesidad de realizar un proyecto adosado a la estructura, se requiere la revisión estructural del edificio para la regularización de construcciones anteriores al año 1959 ante la Dirección de Obras Municipales.\n\nEl presente estudio contempla las siguientes actividades:\n1. Revisión de antecedentes\n2. Levantamiento de condiciones existentes del inmueble\n3. Caracterización de materiales\n4. Ensayos geofísicos MASW/ReMi para clasificación sísmica del suelo\n5. Modelación y análisis estructural\n6. Diagnóstico estructural\n7. Firma profesional para regularización DOM\n\nPara el desarrollo del estudio, es de utilidad que el mandante proporcione los siguientes antecedentes:\n- Planos de arquitectura, elevaciones y plantas disponibles\n- Registros o informes sobre daños estructurales asociados a los sismos de 1985 y 2010\n- Antecedentes de reparaciones o intervenciones estructurales efectuadas con posterioridad a dichos eventos",
+
+  "propuesta_tecnica": "ETAPA 1: Levantamiento situación actual\n\n2.1 Revisión de antecedentes\n\nSe realizará la revisión de los antecedentes solicitados, los cuales deben ser provistos por el mandante en caso de estar disponibles, con el objetivo de extraer la información relevante acerca de su materialidad, daños previos e intervenciones y estado general de la estructura.\n\n2.2 Levantamiento de daños y patologías\n\nSe realizará un levantamiento del estado actual de los elementos estructurales, caracterizándolos de acuerdo con su ubicación, extensión y morfología. Se identificarán daños en elementos de albañilería y hormigón, tales como fisuras, grietas, pérdidas de recubrimiento, deformaciones y eflorescencia en muros. Se considera la utilización de un dron para la inspección y registro de puntos altos y de la techumbre. El levantamiento se realizará con foco en daños estructurales de origen estático y sísmico.\n\n2.3 Levantamiento de materialidad\n\nSe realizará un levantamiento de la materialidad de los distintos elementos de la estructura mediante ensayos no destructivos, como la detección de acero mediante pacómetro y a partir de indicadores visuales. Dado el valor patrimonial del inmueble, la caracterización de los elementos de albañilería se realizará mediante inspección visual detallada, sin considerar ensayos destructivos en dichos elementos.\n\n2.3.1 Ensayo de Índice esclerométrico (martillo Schmidt)\n\nCon el objetivo de determinar la homogeneidad del hormigón utilizado en el edificio, se realizarán mediciones del índice esclerométrico distribuidas en diferentes elementos de hormigón armado. Preliminarmente se contemplan 10 puntos de medición.\n\n2.3.2 Determinación del espaciamiento de armaduras mediante pacómetro\n\nSe determinará el espaciamiento de las armaduras de la primera capa por medio de un pacómetro, con el propósito de estimar las cuantías de acero del elemento estructural. Preliminarmente se contemplan 10 puntos de medición.\n\n2.3.3 Determinación del diámetro de armaduras mediante picados locales\n\nSe realizarán picados locales para exponer la armadura de refuerzo del hormigón, registrando el diámetro de las barras más próximas a la superficie intervenida y el recubrimiento respectivo. Preliminarmente se contemplan 3 puntos.\n\n2.4 Levantamiento geométrico mediante escáner láser 3D\n\nSe realizará un levantamiento geométrico general de la estructura mediante un equipo escáner láser 3D Faro Focus. A partir de los datos registrados se procesará la información digital para obtener una nube de puntos de la estructura, lo que permitirá generar planimetría de forma, secciones transversales y determinar deformaciones existentes en puntos de interés.\n\n2.5 Extracción y ensayo de testigos de hormigón\n\nCon la finalidad de determinar la resistencia a la compresión del hormigón, se realizará la extracción de 3 a 5 testigos de hormigón de la estructura, los cuales se ensayarán en laboratorio a compresión simple. La ubicación de las extracciones quedará a criterio de IDIEM.\n\n2.6 Extracción y ensayo a tracción de barras de acero\n\nSolo en caso de no poder identificar la calidad nominal de las barras de acero a partir de los antecedentes o los picados locales, se extraerán hasta 2 barras de acero para ensayarse bajo la Norma NCh200: Productos Metálicos - Ensayo de Tracción.\n\n2.7 Clasificación sísmica del suelo mediante ensayos geofísicos\n\nSe realizarán 2 ensayos geofísicos del tipo MASW/ReMi con el fin de determinar las velocidades de onda en profundidad, para la posterior clasificación sísmica del suelo de acuerdo al DS.61. Estos ensayos no constituyen un estudio de mecánica de suelos propiamente tal.\n\nETAPA 2: Evaluación estructural\n\n2.8 Modelación y análisis estructural\n\nSe elaborará un modelo computacional en ETABS, que permitirá determinar los esfuerzos inducidos en los elementos estructurales, así como los niveles de deformación, tanto para cargas estáticas como sísmicas. La clasificación sísmica del suelo de fundación se realizará a partir de los ensayos geofísicos contemplados en la presente propuesta.\n\n2.9 Diagnóstico estructural\n\nA partir de los trabajos en terreno y el posterior análisis en oficina, se realizará un diagnóstico estructural del edificio. Como resultado general del diagnóstico, se concluirá respecto de la condición actual de la estructura para hacer frente a las solicitaciones sísmicas especificadas en la normativa actual. En caso de requerirse, se incorporarán recomendaciones de intervención y/o reparación a nivel de ingeniería conceptual.\n\n2.10 Entregables\n\n- Informe de Diagnóstico Estructural\n- Set de planos de forma\n- Informe de mecánica de suelos con clasificación sísmica\n- Firma del profesional IDIEM responsable para la sección 4.1 de la solicitud de regularización de construcción anterior al año 1959 ante la DOM, en caso de cumplimiento normativo",
+
+  "plazos": "Etapa | Plazo\nTrabajo en Terreno | 20 días corridos, luego de la reunión de inicio del servicio\nTrabajo de Gabinete | 70 días corridos, luego de finalizados los trabajos en terreno\n\n- El plazo de trabajos en terreno contempla que el mandante dará de forma oportuna todas las facilidades de acceso a la estructura\n- Los trabajos en terreno se programarán una vez formalizada la aceptación de este presupuesto\n- Los antecedentes solicitados deben ser entregados por el mandante antes de iniciar los trabajos en terreno\n- Este plazo no considera los tiempos asociados a tramitaciones de permisos ante la DOM u otro organismo por parte del mandante",
+
+  "propuesta_economica": "El valor total del servicio es de UF 1.450. De acuerdo con lo dispuesto en el artículo 40 de la Ley N° 21.094 Sobre Universidades Estatales y el Oficio N° 1.216, de 19.04.2023 del Servicio de Impuestos Internos, los servicios aquí ofertados se encuentran exentos de IVA.\n\nSe deberá aceptar formalmente la presente propuesta mediante la elaboración de un contrato.\n\nForma de pago:\n- EDP 1: 50% del valor total del servicio, al momento del término de los trabajos en terreno\n- EDP 2: 50% restante del valor total del servicio, al momento de la entrega del Informe de Diagnóstico Estructural\n\nCondición de pago: Crédito 30 días.",
+
+  "recursos": "Para cumplir con los objetivos propuestos, el cliente deberá proveer de los recursos siguientes:\n\n- Permisos y coordinaciones necesarias para el acceso oportuno\n- Energía 220 V, agua y servicios básicos en terreno\n- Despeje y retiro de cielos falsos",
+
+  "exclusiones": "La presente propuesta no contempla lo siguiente:\n\n- Asesor en prevención de riesgo de IDIEM en terreno\n- Limpieza, retiro de escombros o de elementos\n- Retiro de cielos falsos\n- Reparaciones de zonas prospectadas\n- Elaboración de proyecto de intervención estructural\n- Determinar implicancias y costos de reparación\n- Tramitar permisos o presentar documentación ante terceros"
+}
+
+===================================================================
+PROYECTO A GENERAR - USA SOLO ESTOS DATOS
+===================================================================
+
+ATENCION: Los ejemplos anteriores son solo referencias de estilo y formato. Los datos reales del proyecto que debes usar son únicamente los que aparecen a continuación. No uses ningún nombre, dirección, superficie, precio ni fecha de los ejemplos anteriores.
+
+Si un dato dice "No indicado" o está vacío, usa lenguaje genérico apropiado o infiere un valor razonable. Si hay errores de ortografía en los datos, corrígelos en la respuesta.
+
+CLIENTE: {{cliente}}
+CONTACTO: {{contacto}}
+NOMBRE DEL EDIFICIO: {{edificio}}
+DIRECCION (usa exactamente este texto, no lo reemplaces con la dirección de IDIEM ni ninguna otra): {{direccion}}
+SUPERFICIE CONSTRUIDA: {{superficie}} m2
+ANO DE CONSTRUCCION: {{anio}}
+NUMERO DE PISOS: {{pisos}}
+MATERIALIDAD PRINCIPAL: {{materialidad}}
+CONDICION ESPECIAL: {{condicion}}
+MOTIVACION DEL ESTUDIO: {{motivacion}}
+OBSERVACIONES TECNICAS: {{obs_tecnicas}}
+
+ACTIVIDADES A INCLUIR:
+{{actividades}}
+
+PLAZO EN TERRENO: {{plazo_terreno}}
+PLAZO DE GABINETE: {{plazo_gabinete}}
+PLAZO TOTAL: {{plazo_total}}
+VALOR DEL SERVICIO: UF {{precio_uf}}
+FORMA DE PAGO: {{forma_pago}}
+EXCLUSIONES ADICIONALES: {{exclusiones}}
+CODIGO: {{codigo}}
+REVISION: {{revision}}
+FECHA: {{fecha}}
+ELABORADO POR: {{elaborado}}
+REVISADO POR: {{revisado}}
+
+Responde ahora UNICAMENTE con el JSON. Sin texto antes ni después.
