@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDIEM — Generador de Propuestas</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --bg-card: #161616;
+    --bg-hover: #1e1e1e;
+    --accent: #c41e1e;
+    --accent-dim: rgba(196, 30, 30, 0.12);
+    --accent-line: rgba(196, 30, 30, 0.4);
+    --text: #f0ede8;
+    --text-muted: #888;
+    --text-faint: #444;
+    --border: #252525;
+    --border-hover: #333;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── Grid background ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Layout ── */
+  .page {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 2.5rem 3rem 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    animation: slideDown 0.5s ease both;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -1px;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .header-right {
+    text-align: right;
+  }
+
+  .server-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #444;
+  }
+  .dot.online { background: #4caf50; animation: blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 5rem 3rem 3rem;
+    animation: fadeUp 0.5s 0.1s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .hero-title {
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    color: var(--text);
+    max-width: 640px;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--text-muted);
+  }
+
+  .hero-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 480px;
+    line-height: 1.7;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    margin: 0 3rem;
+    height: 1px;
+    background: var(--border);
+    animation: fadeUp 0.5s 0.2s ease both;
+  }
+
+  /* ── Services grid ── */
+  .services-label {
+    padding: 2rem 3rem 1rem;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    animation: fadeUp 0.5s 0.25s ease both;
+  }
+
+  .services-grid {
+    padding: 0 3rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 0 3rem;
+    animation: fadeUp 0.5s 0.3s ease both;
+  }
+
+  /* ── Service card ── */
+  .service-card {
+    background: var(--bg-card);
+    padding: 2rem;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: background 0.2s, transform 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .service-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: var(--accent);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 0.25s ease;
+  }
+
+  .service-card:hover {
+    background: var(--bg-hover);
+  }
+
+  .service-card:hover::before {
+    transform: scaleY(1);
+  }
+
+  .service-card.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .card-code {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+    background: rgba(255,255,255,0.04);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .card-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--accent-dim);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--accent-line);
+  }
+
+  .card-badge.coming {
+    color: var(--text-faint);
+    background: rgba(255,255,255,0.03);
+    border-color: var(--border);
+  }
+
+  .card-icon {
+    font-size: 28px;
+    line-height: 1;
+    filter: grayscale(0.3);
+  }
+
+  .card-title {
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: -0.3px;
+    line-height: 1.3;
+  }
+
+  .service-card:hover .card-title {
+    color: #fff;
+  }
+
+  .card-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+
+  .card-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .card-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.08em;
+    background: rgba(255,255,255,0.03);
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+
+  .card-arrow {
+    font-size: 14px;
+    color: var(--text-faint);
+    transition: color 0.2s, transform 0.2s;
+  }
+
+  .service-card:hover .card-arrow {
+    color: var(--accent);
+    transform: translateX(4px);
+  }
+
+  /* ── Footer ── */
+  footer {
+    margin-top: auto;
+    padding: 2.5rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+    animation: fadeUp 0.5s 0.4s ease both;
+  }
+
+  .footer-left {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  .footer-right {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  .footer-right span {
+    color: var(--text-muted);
+  }
+
+  /* ── Hover accent glow on card ── */
+  .service-card:hover .card-icon {
+    filter: none;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header>
+    <div>
+      <div class="logo">id<span>ie</span>m</div>
+      <div class="logo-sub">Centro de Investigación · Universidad de Chile</div>
+    </div>
+    <div class="header-right">
+      <div class="server-status">
+        <span class="dot" id="status-dot"></span>
+        <span id="status-text">Verificando servidor...</span>
+      </div>
+      <div style="font-size:10px; color: var(--text-faint); margin-top:4px; font-family: var(--mono);" id="status-model"></div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">División Estructuras y Peritajes</div>
+    <h1 class="hero-title">Generador de<br><em>propuestas técnicas</em></h1>
+    <p class="hero-desc">Selecciona el tipo de servicio para comenzar a redactar la propuesta técnica y económica con el estilo de IDIEM.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="services-label">Servicios disponibles</div>
+
+  <!-- Services grid -->
+  <div class="services-grid">
+
+    <!-- DIAGNÓSTICO -->
+    <a href="service_type/diagnostico.html" class="service-card">
+      <div class="card-top">
+        <span class="card-code">DIAG</span>
+        <span class="card-badge">Disponible</span>
+      </div>
+      <div class="card-icon">🏛️</div>
+      <div class="card-title">Diagnóstico estructural</div>
+      <div class="card-desc">Evaluación del estado actual de estructuras existentes mediante inspección, ensayos y modelación. Incluye variante Monumento Histórico.</div>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">Terreno</span>
+          <span class="card-tag">Ensayos</span>
+          <span class="card-tag">ETABS/SAP2000</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- CÁLCULO -->
+    <a href="service_type/calculo.html" class="service-card">
+      <div class="card-top">
+        <span class="card-code">CALC</span>
+        <span class="card-badge">Disponible</span>
+      </div>
+      <div class="card-icon">📐</div>
+      <div class="card-title">Cálculo estructural</div>
+      <div class="card-desc">Diseño de proyectos nuevos o refuerzo de estructuras existentes. Memoria de cálculo, planos y especificaciones técnicas.</div>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">Proyecto nuevo</span>
+          <span class="card-tag">Refuerzo</span>
+          <span class="card-tag">NCh430/433</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- INCENDIOS -->
+    <a href="service_type/incendios.html" class="service-card">
+      <div class="card-top">
+        <span class="card-code">INC</span>
+        <span class="card-badge">Disponible</span>
+      </div>
+      <div class="card-icon">🔥</div>
+      <div class="card-title">Evaluación por incendio</div>
+      <div class="card-desc">Evaluación de daños estructurales por incendio. Inspección, zonificación de intensidad, ensayos y diagnóstico de recuperabilidad.</div>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">Urgente</span>
+          <span class="card-tag">Escáner 3D</span>
+          <span class="card-tag">Schmidt</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- REVISIÓN -->
+    <a href="#" class="service-card disabled">
+      <div class="card-top">
+        <span class="card-code">REV</span>
+        <span class="card-badge coming">Próximamente</span>
+      </div>
+      <div class="card-icon">🔍</div>
+      <div class="card-title">Revisión estructural</div>
+      <div class="card-desc">Revisión de memorias de cálculo y proyectos estructurales. Verificación de cumplimiento normativo y emisión de observaciones.</div>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">Memoria cálculo</span>
+          <span class="card-tag">Planos</span>
+          <span class="card-tag">Normativa</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- MONITOREO -->
+    <a href="#" class="service-card disabled">
+      <div class="card-top">
+        <span class="card-code">MON</span>
+        <span class="card-badge coming">Próximamente</span>
+      </div>
+      <div class="card-icon">📡</div>
+      <div class="card-title">Monitoreo de vibraciones</div>
+      <div class="card-desc">Medición y diagnóstico de vibraciones en estructuras y equipos. Comparación con umbrales normativos DIN 4150, ISO 10816.</div>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">Acelerómetros</span>
+          <span class="card-tag">DIN 4150</span>
+          <span class="card-tag">ISO 10816</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- PERITAJE -->
+    <a href="#" class="service-card disabled">
+      <div class="card-top">
+        <span class="card-code">PER</span>
+        <span class="card-badge coming">Próximamente</span>
+      </div>
+      <div class="card-icon">⚖️</div>
+      <div class="card-title">Peritaje estructural</div>
+      <div class="card-desc">Estudio de fallas estructurales. Inspección especializada, extracción de muestras, análisis del modo de falla y modelación.</div>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">Estudio falla</span>
+          <span class="card-tag">IdeaStatica</span>
+          <span class="card-tag">Muestras</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-left">IDIEM — Universidad de Chile · División Estructuras y Peritajes</div>
+    <div class="footer-right">Generador interno de propuestas · <span>v1.0</span></div>
+  </footer>
+
+</div>
+
+<script>
+  const SERVER_URL = 'http://localhost:5050';
+
+  async function checkServer() {
+    try {
+      const r = await fetch(`${SERVER_URL}/health`, { signal: AbortSignal.timeout(2000) });
+      const data = await r.json();
+      if (data.status === 'ok') {
+        document.getElementById('status-dot').classList.add('online');
+        document.getElementById('status-text').textContent = 'Servidor activo';
+        document.getElementById('status-model').textContent = data.modelo || 'Llama 3.3 70B';
+      }
+    } catch {
+      document.getElementById('status-text').textContent = 'Servidor no detectado';
+      document.getElementById('status-model').textContent = 'python server.py';
+    }
+  }
+
+  checkServer();
+</script>
+</body>
+</html>
