@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDIEM — Cálculo Estructural</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --bg-card: #ffffff;
+    --bg-input: #faf9f6;
+    --accent: #c41e1e;
+    --accent-soft: #f7e8e8;
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --text-faint: #a0a0a0;
+    --border: #e2dfd8;
+    --border-strong: #c8c4bc;
+    --success: #1a6b3c;
+    --success-bg: #e8f5ee;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+  }
+
+  /* --- Sidebar --- */
+  .sidebar {
+    background: var(--text);
+    color: #fff;
+    padding: 2rem 1.5rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .sidebar-logo {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-logo span { color: var(--accent); }
+
+  .sidebar-sub {
+    font-size: 11px;
+    color: #888;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .sidebar-service {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #2a2a2a;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 0.75rem;
+  }
+
+  .nav-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .nav-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border: none;
+    background: transparent;
+    color: #888;
+    text-align: left;
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 13px;
+  }
+
+  .nav-step:hover { background: rgba(255,255,255,0.06); color: #ccc; }
+  .nav-step.active { background: rgba(255,255,255,0.1); color: #fff; }
+  .nav-step.done { color: #aaa; }
+  .nav-step.done .step-num { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .nav-step.active .step-num { background: #fff; color: var(--text); border-color: #fff; }
+
+  .step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-status {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid #2a2a2a;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #444;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .status-dot.online { background: #4caf50; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .status-text { font-size: 11px; color: #666; }
+  .status-model { font-family: var(--mono); font-size: 11px; color: #888; margin-top: 4px; }
+
+  .back-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #555;
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: #aaa; }
+
+  /* --- Main --- */
+  .main {
+    padding: 3rem 3.5rem;
+    max-width: 780px;
+  }
+
+  .step-panel { display: none; }
+  .step-panel.active { display: block; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+  .panel-header { margin-bottom: 2rem; }
+  .panel-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .panel-title { font-size: 24px; font-weight: 300; color: var(--text); letter-spacing: -0.3px; }
+  .panel-desc { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+
+  /* --- Tipo selector --- */
+  .tipo-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .tipo-card {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    cursor: pointer;
+    background: var(--bg-input);
+    transition: all 0.15s;
+  }
+  .tipo-card:hover { border-color: var(--border-strong); background: var(--bg-card); }
+  .tipo-card.on { border-color: var(--accent); background: var(--accent-soft); }
+
+  .tipo-card-icon {
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  .tipo-card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .tipo-card.on .tipo-card-title { color: var(--accent); }
+
+  .tipo-card-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* --- Form elements --- */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 1.75rem 0 1rem;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field { margin-bottom: 1.25rem; }
+
+  .field > label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    letter-spacing: 0.01em;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--border-strong);
+    background: var(--bg-card);
+  }
+
+  .field textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .field .hint { font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+  /* --- Tags --- */
+  .tag-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--text-muted);
+    background: var(--bg-input);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .tag:hover { border-color: var(--border-strong); color: var(--text); }
+  .tag.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+
+  /* --- Checkboxes --- */
+  .check-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    background: var(--bg-input);
+    transition: all 0.15s;
+  }
+  .check-item:hover { border-color: var(--border-strong); }
+  .check-item.on { border-color: var(--accent); background: var(--accent-soft); }
+  .check-item input { display: none; }
+  .check-box {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .check-item.on .check-box { background: var(--accent); border-color: var(--accent); }
+  .check-item.on .check-box::after {
+    content: '';
+    width: 8px;
+    height: 5px;
+    border-left: 1.5px solid #fff;
+    border-bottom: 1.5px solid #fff;
+    transform: rotate(-45deg) translateY(-1px);
+    display: block;
+  }
+  .check-label { font-size: 12px; color: var(--text); line-height: 1.4; }
+  .check-item.on .check-label { color: var(--accent); }
+
+  /* Sección condicional */
+  .conditional-section {
+    display: none;
+  }
+  .conditional-section.visible {
+    display: block;
+  }
+
+  /* --- Buttons --- */
+  .btn-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn {
+    padding: 9px 20px;
+    border-radius: 6px;
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .btn:hover { background: var(--border); color: var(--text); }
+
+  .btn-primary {
+    background: var(--text);
+    color: #fff;
+    border-color: var(--text);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary:hover { background: #333; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-ghost { border: none; background: none; font-size: 13px; color: var(--text-muted); cursor: pointer; padding: 9px 4px; }
+  .btn-ghost:hover { color: var(--text); }
+
+  /* --- Loading --- */
+  .loading-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 2rem 0;
+  }
+
+  .loading-bar-outer {
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .loading-bar-inner {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    animation: loading 1.8s ease-in-out infinite;
+    width: 40%;
+  }
+
+  @keyframes loading {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(350%); }
+  }
+
+  .loading-msg {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* --- Error --- */
+  .error-box {
+    background: #fff5f5;
+    border: 1px solid #f5c0c0;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    font-size: 13px;
+    color: #a00;
+    line-height: 1.5;
+  }
+
+  /* --- Result --- */
+  .result-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .result-meta { font-size: 12px; color: var(--text-muted); }
+  .result-meta strong { color: var(--text); font-weight: 500; }
+
+  .btn-copy {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    transition: all 0.15s;
+    font-family: var(--sans);
+  }
+  .btn-copy:hover { border-color: var(--text); color: var(--text); }
+  .btn-copy.copied { background: var(--success-bg); border-color: var(--success); color: var(--success); }
+
+  .result-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    max-height: 560px;
+    overflow-y: auto;
+  }
+
+  .result-text {
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">id<span>ie</span>m</div>
+    <div class="sidebar-sub">Generador de propuestas</div>
+    <div class="sidebar-service">Cálculo estructural</div>
+
+    <div class="nav-label">Pasos</div>
+    <nav class="nav-steps">
+      <button class="nav-step active" id="nav-1" onclick="goTo(1)">
+        <span class="step-num">1</span> Tipo y cliente
+      </button>
+      <button class="nav-step" id="nav-2" onclick="goTo(2)">
+        <span class="step-num">2</span> Alcance técnico
+      </button>
+      <button class="nav-step" id="nav-3" onclick="goTo(3)">
+        <span class="step-num">3</span> Plazos y precio
+      </button>
+      <button class="nav-step" id="nav-4" onclick="goTo(4)">
+        <span class="step-num">4</span> Resultado
+      </button>
+    </nav>
+
+    <div class="sidebar-status">
+      <div>
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-text" id="status-text">Verificando servidor...</span>
+      </div>
+      <div class="status-model" id="status-model"></div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+
+    <!-- PASO 1 — Tipo y cliente -->
+    <div class="step-panel active" id="panel-1">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Paso 1 / 3</div>
+        <div class="panel-title">Tipo de servicio y cliente</div>
+        <div class="panel-desc">Define el tipo de cálculo y los datos del cliente</div>
+      </div>
+
+      <div class="section-label">Tipo de cálculo</div>
+      <div class="tipo-cards">
+        <div class="tipo-card" id="tipo-nuevo" onclick="seleccionarTipo('nuevo')">
+          <div class="tipo-card-icon">🏗️</div>
+          <div class="tipo-card-title">Proyecto nuevo</div>
+          <div class="tipo-card-desc">Diseño estructural desde cero. Sin trabajo en terreno. Entregables: memoria de cálculo + planos estructurales.</div>
+        </div>
+        <div class="tipo-card" id="tipo-refuerzo" onclick="seleccionarTipo('refuerzo')">
+          <div class="tipo-card-icon">🔧</div>
+          <div class="tipo-card-title">Refuerzo de estructura existente</div>
+          <div class="tipo-card-desc">Incluye levantamiento en terreno, caracterización de materiales, diseño del refuerzo y estimación de costos.</div>
+        </div>
+      </div>
+
+      <div class="section-label">Datos del cliente</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Institución / cliente</label>
+          <input type="text" id="cliente" placeholder="Ej: Municipalidad de Santiago">
+        </div>
+        <div class="field">
+          <label>Nombre del contacto</label>
+          <input type="text" id="contacto" placeholder="Ej: Juan Muñoz Morales">
+        </div>
+      </div>
+
+      <div class="section-label">Datos del proyecto</div>
+      <div class="field">
+        <label>Nombre del proyecto / estructura</label>
+        <input type="text" id="proyecto" placeholder="Ej: Edificio Amunategui 980 / Caseta Acceso Base Aérea Los Cóndores">
+      </div>
+      <div class="field">
+        <label>Dirección / ubicación</label>
+        <input type="text" id="direccion" placeholder="Ej: Amunategui 980, Santiago / Base Aérea Los Cóndores, Iquique">
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Tipo de estructura</label>
+          <div class="tag-group" id="tags-tipo-estructura">
+            <div class="tag" onclick="toggle(this)">Hormigón armado</div>
+            <div class="tag" onclick="toggle(this)">Estructura metálica</div>
+            <div class="tag" onclick="toggle(this)">Albañilería</div>
+            <div class="tag" onclick="toggle(this)">Madera</div>
+            <div class="tag" onclick="toggle(this)">Mixta</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Superficie aproximada (m²)</label>
+          <input type="text" id="superficie" placeholder="Ej: 460">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Número de pisos</label>
+          <input type="text" id="pisos" placeholder="Ej: 2 pisos sin subterráneo">
+        </div>
+        <div class="field">
+          <label>Uso / destino</label>
+          <input type="text" id="uso" placeholder="Ej: Oficinas / Bodega / Habitacional">
+        </div>
+      </div>
+
+      <!-- Solo para refuerzo -->
+      <div class="conditional-section" id="seccion-antecedente">
+        <div class="section-label">Antecedente previo (si aplica)</div>
+        <div class="field">
+          <label>Informe o estudio IDIEM de referencia</label>
+          <input type="text" id="informe_previo" placeholder="Ej: Informe IDIEM N° 2.068.403 Rev.1 / Inspección IDIEM diciembre 2024">
+          <div class="hint">Si el refuerzo viene de un diagnóstico o inspección previa de IDIEM, indícalo aquí</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <div></div>
+        <button class="btn btn-primary" onclick="goTo(2)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- PASO 2 — Alcance técnico -->
+    <div class="step-panel" id="panel-2">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Paso 2 / 3</div>
+        <div class="panel-title">Alcance técnico</div>
+        <div class="panel-desc">Motivación, actividades y normativa aplicable</div>
+      </div>
+
+      <div class="section-label">Motivación del estudio</div>
+      <div class="field">
+        <label>¿Por qué se solicita este cálculo?</label>
+        <textarea id="motivacion" placeholder="Ej: Se requiere el proyecto estructural para tramitar permisos de edificación ante la DOM. / A partir del diagnóstico previo se identificaron losas con insuficiente recubrimiento que requieren refuerzo."></textarea>
+      </div>
+
+      <!-- Actividades proyecto nuevo -->
+      <div class="conditional-section" id="actividades-nuevo">
+        <div class="section-label">Actividades — Proyecto nuevo</div>
+        <div class="field">
+          <div class="check-grid">
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Revisión de antecedentes del mandante</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Diseño esquemático (estructuración conceptual)</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Diseño en detalle (análisis sísmico + dimensionamiento)</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Modelación computacional (ETABS / SAP2000)</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Memoria de cálculo</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Planos estructurales</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Especificaciones técnicas</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Bases de cálculo</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label">Normativa aplicable</div>
+        <div class="field">
+          <div class="tag-group" id="tags-normativa-nuevo">
+            <div class="tag" onclick="toggle(this)">NCh430 (HA)</div>
+            <div class="tag" onclick="toggle(this)">NCh431 (cargas de nieve)</div>
+            <div class="tag" onclick="toggle(this)">NCh432 (viento)</div>
+            <div class="tag" onclick="toggle(this)">NCh433 / DS.61 (sísmico)</div>
+            <div class="tag" onclick="toggle(this)">NCh1537 (cargas)</div>
+            <div class="tag" onclick="toggle(this)">DS.60 (HA)</div>
+            <div class="tag" onclick="toggle(this)">NCh3171 (combinaciones)</div>
+            <div class="tag" onclick="toggle(this)">NCh2369 (industrial)</div>
+            <div class="tag" onclick="toggle(this)">OGUC</div>
+            <div class="tag" onclick="toggle(this)">ACI 318</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actividades refuerzo -->
+      <div class="conditional-section" id="actividades-refuerzo">
+        <div class="section-label">Actividades en terreno</div>
+        <div class="field">
+          <div class="check-grid" id="checks-terreno">
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Revisión de antecedentes e informe previo</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Levantamiento dimensional (escáner láser 3D)</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Inspección visual y levantamiento de daños</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Medición de armaduras (pacómetro / georradar)</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Extracción y ensayo de testigos de hormigón</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Extracción y ensayo a tracción de acero</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Ensayos no destructivos (índice esclerométrico)</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Identificación de elementos a reforzar</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label">Actividades en oficina</div>
+        <div class="field">
+          <div class="check-grid" id="checks-oficina">
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Modelación y análisis estructural (ETABS / SAP2000)</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Verificación estructural normativa</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Diseño del refuerzo estructural</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Memoria de cálculo del refuerzo</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Planos de detalle del refuerzo</span>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox"><div class="check-box"></div>
+              <span class="check-label">Estimación general de costos de ejecución</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label">Normativa aplicable</div>
+        <div class="field">
+          <div class="tag-group" id="tags-normativa-refuerzo">
+            <div class="tag" onclick="toggle(this)">NCh430 (HA)</div>
+            <div class="tag" onclick="toggle(this)">NCh433 / DS.61 (sísmico)</div>
+            <div class="tag" onclick="toggle(this)">DS.60 (HA)</div>
+            <div class="tag" onclick="toggle(this)">NCh3171 (combinaciones)</div>
+            <div class="tag" onclick="toggle(this)">NCh200 (tracción acero)</div>
+            <div class="tag" onclick="toggle(this)">ACI 318</div>
+            <div class="tag" onclick="toggle(this)">NCh2369 (industrial)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Observaciones técnicas</div>
+      <div class="field">
+        <label>Consideraciones especiales del proyecto</label>
+        <textarea id="obs_tecnicas" placeholder="Ej: La estructura es adosada a edificio existente, requiere coordinación con arquitecto. / No se incluye diseño de elementos secundarios ni no estructurales."></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="goTo(1)">← Volver</button>
+        <button class="btn btn-primary" onclick="goTo(3)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- PASO 3 — Plazos y precio -->
+    <div class="step-panel" id="panel-3">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Paso 3 / 3</div>
+        <div class="panel-title">Plazos y precio</div>
+        <div class="panel-desc">Condiciones económicas y administrativas</div>
+      </div>
+
+      <div class="section-label">Plazos</div>
+      <!-- Proyecto nuevo: un solo plazo total -->
+      <div class="conditional-section" id="plazos-nuevo">
+        <div class="grid-2">
+          <div class="field">
+            <label>Plazo total del servicio</label>
+            <input type="text" id="plazo_total_nuevo" placeholder="Ej: 30 días hábiles / 40 días hábiles">
+            <div class="hint">Plazo desde la recepción de antecedentes y aceptación formal</div>
+          </div>
+          <div class="field">
+            <label>Etapa 1 — Diseño esquemático (si aplica)</label>
+            <input type="text" id="plazo_etapa1" placeholder="Ej: 10 días hábiles">
+          </div>
+        </div>
+        <div class="field">
+          <label>Etapa 2 — Diseño en detalle (si aplica)</label>
+          <input type="text" id="plazo_etapa2" placeholder="Ej: 30 días hábiles">
+        </div>
+      </div>
+
+      <!-- Refuerzo: terreno + gabinete -->
+      <div class="conditional-section" id="plazos-refuerzo">
+        <div class="grid-3">
+          <div class="field">
+            <label>Plazo en terreno</label>
+            <input type="text" id="plazo_terreno" placeholder="Ej: 5 días hábiles">
+          </div>
+          <div class="field">
+            <label>Plazo de gabinete</label>
+            <input type="text" id="plazo_gabinete" placeholder="Ej: 30 días hábiles">
+          </div>
+          <div class="field">
+            <label>Plazo total</label>
+            <input type="text" id="plazo_total_refuerzo" placeholder="Ej: 35 días hábiles">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Propuesta económica</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Valor del servicio (UF)</label>
+          <input type="text" id="precio_uf" placeholder="Ej: 480">
+        </div>
+        <div class="field">
+          <label>Forma de pago</label>
+          <select id="forma_pago">
+            <option value="50_inicio">50% al inicio, 50% al entregar informe</option>
+            <option value="50_terreno">50% al término de terreno, 50% al entregar informe</option>
+            <option value="100_entrega">100% al momento de entregar el informe</option>
+            <option value="traspaso_interno">Traspaso interno Universidad de Chile</option>
+            <option value="estados_mensuales">Estados de pago mensuales</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-label">Exclusiones específicas</div>
+      <div class="field">
+        <label>Exclusiones adicionales para esta propuesta</label>
+        <textarea id="exclusiones" placeholder="Ej: No incluye visitas a terreno durante la construcción. No incluye diseño de instalaciones. No incluye tramitación de permisos ante la DOM u otro organismo."></textarea>
+        <div class="hint">Se agregan a las exclusiones estándar (asesor prevención de riesgos, revisión estructural independiente, cubicaciones)</div>
+      </div>
+
+      <div class="section-label">Identificación del documento</div>
+      <div class="grid-3">
+        <div class="field">
+          <label>Código de propuesta</label>
+          <input type="text" id="codigo" placeholder="Ej: PR.DEP.2025.0274">
+        </div>
+        <div class="field">
+          <label>Revisión</label>
+          <input type="text" id="revision" placeholder="Ej: Rev. N°0">
+        </div>
+        <div class="field">
+          <label>Fecha</label>
+          <input type="text" id="fecha" placeholder="Ej: 28-04-2026">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Elaborado por</label>
+          <input type="text" id="elaborado" placeholder="Ej: Juan Albornoz M.">
+        </div>
+        <div class="field">
+          <label>Revisado por</label>
+          <input type="text" id="revisado" placeholder="Ej: Guillermo Sierra R.">
+        </div>
+      </div>
+
+      <div id="error-container" style="margin-top:1rem;"></div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="goTo(2)">← Volver</button>
+        <button class="btn btn-primary" id="btn-generar" onclick="generarPropuesta()">
+          Generar propuesta →
+        </button>
+      </div>
+    </div>
+
+    <!-- PASO 4 — Resultado -->
+    <div class="step-panel" id="panel-4">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Resultado</div>
+        <div class="panel-title">Borrador generado</div>
+        <div class="panel-desc">Revisa el contenido y descarga el Word</div>
+      </div>
+
+      <div id="loading-wrap" class="loading-wrap">
+        <div class="loading-bar-outer"><div class="loading-bar-inner"></div></div>
+        <div class="loading-msg" id="loading-msg">Generando propuesta...</div>
+      </div>
+
+      <div id="result-wrap" style="display:none;">
+        <div class="result-toolbar">
+          <div class="result-meta">
+            Propuesta para <strong id="result-proyecto"></strong> —
+            <span id="result-codigo" style="font-family: var(--mono); font-size:11px;"></span>
+          </div>
+          <button class="btn-copy" id="btn-copy" onclick="copiarTexto()">Copiar texto</button>
+        </div>
+        <div class="result-box">
+          <div class="result-text" id="result-text"></div>
+        </div>
+
+        <div id="word-status" style="display:none; margin-top:1rem; font-size:12px; color: var(--text-muted); font-family: var(--mono);"></div>
+
+        <div class="btn-row">
+          <button class="btn-ghost" onclick="nuevaPropuesta()">← Nueva propuesta</button>
+          <div style="display:flex;gap:8px;">
+            <button class="btn" onclick="copiarTexto()">Copiar texto</button>
+            <button class="btn btn-primary" id="btn-word" onclick="descargarWord()">
+              Descargar Word →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="error-wrap" style="display:none;">
+        <div class="error-box" id="error-text"></div>
+        <div class="btn-row">
+          <button class="btn" onclick="goTo(3)">← Volver e intentar</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const SERVER_URL = 'http://localhost:5050';
+  let tipoCalculo = ''; // 'nuevo' o 'refuerzo'
+
+  // ============================================================
+  // TIPO DE CÁLCULO
+  // ============================================================
+  function seleccionarTipo(tipo) {
+    tipoCalculo = tipo;
+
+    // Actualizar tarjetas
+    document.querySelectorAll('.tipo-card').forEach(c => c.classList.remove('on'));
+    document.getElementById(`tipo-${tipo}`).classList.add('on');
+
+    // Mostrar/ocultar secciones condicionales
+    const esRefuerzo = tipo === 'refuerzo';
+
+    document.getElementById('seccion-antecedente').classList.toggle('visible', esRefuerzo);
+    document.getElementById('actividades-nuevo').classList.toggle('visible', !esRefuerzo);
+    document.getElementById('actividades-refuerzo').classList.toggle('visible', esRefuerzo);
+    document.getElementById('plazos-nuevo').classList.toggle('visible', !esRefuerzo);
+    document.getElementById('plazos-refuerzo').classList.toggle('visible', esRefuerzo);
+  }
+
+  // Inicializar con proyecto nuevo por defecto
+  seleccionarTipo('nuevo');
+
+  // ============================================================
+  // HEALTH CHECK
+  // ============================================================
+  async function checkServer() {
+    try {
+      const r = await fetch(`${SERVER_URL}/health`, { signal: AbortSignal.timeout(2000) });
+      const data = await r.json();
+      if (data.status === 'ok') {
+        document.getElementById('status-dot').classList.add('online');
+        document.getElementById('status-text').textContent = 'Servidor conectado';
+        document.getElementById('status-model').textContent = data.modelo || 'Llama 3.3 70B';
+      }
+    } catch {
+      document.getElementById('status-text').textContent = 'Servidor no detectado';
+      document.getElementById('status-model').textContent = 'Ejecuta: python server.py';
+    }
+  }
+  checkServer();
+
+  // ============================================================
+  // NAVEGACIÓN
+  // ============================================================
+  function goTo(n) {
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-step').forEach((s, i) => {
+      s.classList.remove('active', 'done');
+      if (i + 1 < n) s.classList.add('done');
+      if (i + 1 === n) s.classList.add('active');
+    });
+    document.getElementById(`panel-${n}`).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  // ============================================================
+  // FORM HELPERS
+  // ============================================================
+  function toggle(el) { el.classList.toggle('on'); }
+
+  function toggleCheck(el) {
+    el.classList.toggle('on');
+    el.querySelector('input').checked = el.classList.contains('on');
+  }
+
+  function getTags(id) {
+    return Array.from(document.querySelectorAll(`#${id} .tag.on`)).map(t => t.textContent.trim());
+  }
+
+  function getChecked(id) {
+    const container = id ? document.getElementById(id) : document;
+    return Array.from((container || document).querySelectorAll('.check-item.on'))
+      .map(el => el.querySelector('.check-label').textContent.trim());
+  }
+
+  function v(id) { return document.getElementById(id)?.value?.trim() || ''; }
+
+  function copiarTexto() {
+    const text = document.getElementById('result-text').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('btn-copy');
+      btn.textContent = '¡Copiado!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copiar texto'; btn.classList.remove('copied'); }, 2500);
+    });
+  }
+
+  // ============================================================
+  // RECOPILAR FORMULARIO
+  // ============================================================
+  function recopilarFormulario() {
+    const esRefuerzo = tipoCalculo === 'refuerzo';
+
+    // Actividades según tipo
+    let actividades = [];
+    if (!esRefuerzo) {
+      actividades = getChecked('actividades-nuevo');
+    } else {
+      const terreno = getChecked('checks-terreno');
+      const oficina = getChecked('checks-oficina');
+      actividades = [...terreno, ...oficina];
+    }
+
+    // Normativa
+    const normativaId = esRefuerzo ? 'tags-normativa-refuerzo' : 'tags-normativa-nuevo';
+    const normativa = getTags(normativaId);
+
+    // Plazos
+    let plazo_terreno = '', plazo_gabinete = '', plazo_total = '';
+    if (!esRefuerzo) {
+      plazo_total = v('plazo_total_nuevo');
+      const etapa1 = v('plazo_etapa1');
+      const etapa2 = v('plazo_etapa2');
+      if (etapa1 || etapa2) {
+        plazo_terreno = etapa1 ? `Etapa 1: ${etapa1}` : '';
+        plazo_gabinete = etapa2 ? `Etapa 2: ${etapa2}` : '';
+      }
+    } else {
+      plazo_terreno = v('plazo_terreno');
+      plazo_gabinete = v('plazo_gabinete');
+      plazo_total = v('plazo_total_refuerzo');
+    }
+
+    return {
+      tipo_calculo: tipoCalculo,
+      cliente: v('cliente'),
+      contacto: v('contacto'),
+      proyecto: v('proyecto'),
+      direccion: v('direccion'),
+      tipo_estructura: getTags('tags-tipo-estructura').join(', '),
+      superficie: v('superficie'),
+      pisos: v('pisos'),
+      uso: v('uso'),
+      informe_previo: v('informe_previo'),
+      motivacion: v('motivacion'),
+      actividades,
+      normativa: normativa.join(', '),
+      obs_tecnicas: v('obs_tecnicas'),
+      plazo_terreno,
+      plazo_gabinete,
+      plazo_total,
+      precio_uf: v('precio_uf'),
+      forma_pago: document.getElementById('forma_pago')?.value || '50_inicio',
+      exclusiones: v('exclusiones'),
+      codigo: v('codigo') || 'PR.DEP.2025.XXXX',
+      revision: v('revision') || 'Rev. N°0',
+      fecha: v('fecha') || new Date().toLocaleDateString('es-CL'),
+      elaborado: v('elaborado'),
+      revisado: v('revisado') || 'Guillermo Sierra R.',
+    };
+  }
+
+  // ============================================================
+  // GENERAR PROPUESTA
+  // ============================================================
+  async function generarPropuesta() {
+    const proyecto = v('proyecto');
+    const cliente = v('cliente');
+
+    if (!cliente || !proyecto) {
+      document.getElementById('error-container').innerHTML =
+        '<div class="error-box">Completa al menos el nombre del cliente y del proyecto antes de continuar.</div>';
+      return;
+    }
+    if (!tipoCalculo) {
+      document.getElementById('error-container').innerHTML =
+        '<div class="error-box">Selecciona el tipo de cálculo (Proyecto nuevo o Refuerzo).</div>';
+      return;
+    }
+    document.getElementById('error-container').innerHTML = '';
+
+    goTo(4);
+    document.getElementById('loading-wrap').style.display = 'flex';
+    document.getElementById('result-wrap').style.display = 'none';
+    document.getElementById('error-wrap').style.display = 'none';
+
+    const msgs = [
+      'Cargando prompt de cálculo...',
+      'Enviando al modelo...',
+      'Redactando alcance y propuesta técnica...',
+      'Generando plazos y condiciones económicas...',
+      'Finalizando el borrador...'
+    ];
+    let mi = 0;
+    const msgEl = document.getElementById('loading-msg');
+    const interval = setInterval(() => {
+      mi = (mi + 1) % msgs.length;
+      msgEl.textContent = msgs[mi];
+    }, 4000);
+
+    try {
+      const formulario = recopilarFormulario();
+
+      const response = await fetch(`${SERVER_URL}/generar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: 'calculo', formulario })
+      });
+
+      clearInterval(interval);
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || `Error HTTP ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const proyectoNombre = proyecto.replace(/\s+/g, '_').substring(0, 30);
+      const codigoNombre = (v('codigo') || 'PR_DEP_2025_XXXX').replace(/\./g, '_');
+      a.href = url;
+      a.download = `${codigoNombre}_${proyectoNombre}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      document.getElementById('result-proyecto').textContent = proyecto;
+      document.getElementById('result-codigo').textContent = v('codigo') || 'PR.DEP.2025.XXXX';
+      document.getElementById('result-text').textContent = 'Propuesta generada y descargada como Word.';
+      document.getElementById('loading-wrap').style.display = 'none';
+      document.getElementById('result-wrap').style.display = 'block';
+
+    } catch (err) {
+      clearInterval(interval);
+      let msg = err.message;
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        msg = 'No se pudo conectar con el servidor Flask en localhost:5050.\n' +
+              'Asegúrate de tener server.py corriendo: python server.py';
+      }
+      document.getElementById('error-text').textContent = msg;
+      document.getElementById('loading-wrap').style.display = 'none';
+      document.getElementById('error-wrap').style.display = 'block';
+    }
+  }
+
+  // ============================================================
+  // DESCARGAR WORD (desde paso 4 si ya tiene texto)
+  // ============================================================
+  async function descargarWord() {
+    // Si ya se descargó automáticamente, simplemente regenerar
+    generarPropuesta();
+  }
+
+  function nuevaPropuesta() {
+    document.querySelectorAll('input[type=text], textarea').forEach(el => el.value = '');
+    document.querySelectorAll('.tag.on').forEach(el => el.classList.remove('on'));
+    document.querySelectorAll('.check-item.on').forEach(el => {
+      el.classList.remove('on');
+      el.querySelector('input').checked = false;
+    });
+    seleccionarTipo('nuevo');
+    document.getElementById('loading-wrap').style.display = 'flex';
+    document.getElementById('result-wrap').style.display = 'none';
+    document.getElementById('error-wrap').style.display = 'none';
+    goTo(1);
+  }
+</script>
+</body>
+</html>
