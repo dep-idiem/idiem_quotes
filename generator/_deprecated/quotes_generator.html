@@ -8,6 +8,8 @@
 <style>
   /* ============================================================
      CONFIGURACIÓN OLLAMA
+     Si cambiaste el puerto de Ollama, edita OLLAMA_URL.
+     Si quieres usar otro modelo, edita OLLAMA_MODEL.
      ============================================================ */
   :root {
     --ollama-url: "http://localhost:11434";
@@ -792,155 +794,33 @@
 
 <script>
   // ============================================================
-  // CONFIGURACIÓN — edita esto si necesitas cambiar algo
-  // ============================================================
-  const OLLAMA_URL = 'http://localhost:11434';
-  const OLLAMA_MODEL = 'llama3.3:70b'; //'mistral-small3.1';
-  // 'llama3.1:8b'     → más rápido, menos RAM
-  // 'mistral:7b'      → alternativa liviana
-  // 'mistral-small3.1' → mejor calidad (recomendado con 32GB)
-
-  // ============================================================
-  // CONFIGURACIÓN SERVIDOR FLASK
-  // Si cambiaste el puerto en server.py, edítalo aquí también.
+  // CONFIGURACIÓN
+  // Cambia SERVER_URL cuando hagas deploy en DigitalOcean:
+  // const SERVER_URL = 'https://tu-app.ondigitalocean.app';
   // ============================================================
   const SERVER_URL = 'http://localhost:5050';
 
   // ============================================================
-  // VERIFICAR CONEXIÓN CON OLLAMA Y SERVIDOR AL CARGAR
+  // VERIFICAR CONEXIÓN CON SERVIDOR AL CARGAR
   // ============================================================
   async function checkServer() {
     try {
-      const r = await fetch(`${SERVER_URL}/health`, { signal: AbortSignal.timeout(2000) });
+      const r = await fetch(`${SERVER_URL}/health`, { signal: AbortSignal.timeout(3000) });
       const data = await r.json();
       if (data.status === 'ok') {
-        document.getElementById('status-model').textContent += ' · servidor ✓';
-      }
-    } catch {
-      document.getElementById('status-model').textContent += ' · servidor Flask no detectado';
-    }
-  }
-
-  // ============================================================
-  // RECOPILAR DATOS DEL FORMULARIO (función centralizada)
-  // ============================================================
-  function recopilarFormulario() {
-    return {
-      cliente:      v('cliente'),
-      contacto:     v('contacto'),
-      edificio:     v('edificio'),
-      direccion:    v('direccion'),
-      superficie:   v('superficie'),
-      anio:         v('anio'),
-      pisos:        v('pisos'),
-      materialidad: getTags('tags-materialidad').join(', '),
-      condicion:    getTags('tags-condicion').join(', '),
-      motivacion:   v('motivacion'),
-      obs_tecnicas: v('obs_tecnicas'),
-      actividades:  getChecked(),
-      plazo_terreno:  v('plazo_terreno'),
-      plazo_gabinete: v('plazo_gabinete'),
-      plazo_total:    v('plazo_total'),
-      precio_uf:    v('precio_uf'),
-      forma_pago:   document.getElementById('forma_pago')?.value || '50_inicio',
-      detalle_pago: v('detalle_pago'),
-      exclusiones:  v('exclusiones'),
-      codigo:       v('codigo') || 'PR.DEP.2025.XXXX',
-      revision:     v('revision') || 'Rev. N°1',
-      fecha:        v('fecha') || new Date().toLocaleDateString('es-CL'),
-      elaborado:    v('elaborado'),
-      revisado:     v('revisado') || 'Guillermo Sierra R.',
-    };
-  }
-
-  // ============================================================
-  // DESCARGAR WORD AUTOMÁTICAMENTE
-  // ============================================================
-  async function descargarWord() {
-    const texto = document.getElementById('result-text').textContent;
-    const btn = document.getElementById('btn-word');
-    const statusEl = document.getElementById('word-status');
-
-    if (!texto) return;
-
-    btn.disabled = true;
-    btn.textContent = 'Generando Word...';
-    statusEl.style.display = 'block';
-    statusEl.textContent = 'Conectando con servidor Flask...';
-
-    // Recopilar datos del formulario para la portada
-    const datosFormulario = recopilarFormulario();
-
-    try {
-      statusEl.textContent = 'Rellenando template Word...';
-
-      const response = await fetch(`${SERVER_URL}/generar-word`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tipo: 'diagnostico',
-          texto: texto,
-          formulario: datosFormulario
-        })
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'Error del servidor');
-      }
-
-      // Descargar el archivo
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const edificio = v('edificio').replace(/\s+/g, '_') || 'propuesta';
-      const codigo = (v('codigo') || 'PR_DEP_2025_XXXX').replace(/\./g, '_');
-      a.href = url;
-      a.download = `${codigo}_${edificio}.docx`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      statusEl.textContent = '✓ Word descargado correctamente';
-      setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
-
-    } catch (err) {
-      let msg = err.message;
-      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-        msg = 'No se pudo conectar con el servidor Flask. ' +
-              'Asegúrate de tener server.py corriendo: python server.py';
-      }
-      statusEl.textContent = '✗ ' + msg;
-      statusEl.style.color = 'var(--accent)';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Descargar Word →';
-    }
-  }
-
-  // ============================================================
-  // VERIFICAR CONEXIÓN CON OLLAMA AL CARGAR
-  // ============================================================
-  async function checkOllama() {
-    try {
-      const r = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(3000) });
-      const data = await r.json();
-      const models = data.models?.map(m => m.name) || [];
-      const found = models.find(m => m.startsWith(OLLAMA_MODEL.split(':')[0]));
-      if (found) {
         document.getElementById('status-dot').classList.add('online');
-        document.getElementById('status-text').textContent = 'Ollama conectado';
-        document.getElementById('status-model').textContent = found;
-      } else {
-        document.getElementById('status-dot').style.background = '#f0a500';
-        document.getElementById('status-text').textContent = 'Modelo no encontrado';
-        document.getElementById('status-model').textContent = `Descarga: ollama pull ${OLLAMA_MODEL}`;
+        document.getElementById('status-text').textContent = 'Servidor conectado';
+        document.getElementById('status-model').textContent = data.modelo || '';
+        if (data.api_key && data.api_key !== 'configurada') {
+          document.getElementById('status-text').textContent = 'API key faltante';
+          document.getElementById('status-dot').style.background = '#f0a500';
+        }
       }
     } catch {
-      document.getElementById('status-text').textContent = 'Ollama no detectado';
-      document.getElementById('status-model').textContent = 'Inicia Ollama e intenta de nuevo';
+      document.getElementById('status-text').textContent = 'Servidor no detectado';
+      document.getElementById('status-model').textContent = 'Ejecuta: python server.py';
     }
   }
-  checkOllama();
   checkServer();
 
   // ============================================================
@@ -981,6 +861,41 @@
 
   function v(id) { return document.getElementById(id)?.value?.trim() || ''; }
 
+  // ============================================================
+  // RECOPILAR DATOS DEL FORMULARIO
+  // ============================================================
+  function recopilarFormulario() {
+    return {
+      cliente:        v('cliente'),
+      contacto:       v('contacto'),
+      edificio:       v('edificio'),
+      direccion:      v('direccion'),
+      superficie:     v('superficie'),
+      anio:           v('anio'),
+      pisos:          v('pisos'),
+      materialidad:   getTags('tags-materialidad').join(', '),
+      condicion:      getTags('tags-condicion').join(', '),
+      motivacion:     v('motivacion'),
+      obs_tecnicas:   v('obs_tecnicas'),
+      actividades:    getChecked(),
+      plazo_terreno:  v('plazo_terreno'),
+      plazo_gabinete: v('plazo_gabinete'),
+      plazo_total:    v('plazo_total'),
+      precio_uf:      v('precio_uf'),
+      forma_pago:     document.getElementById('forma_pago')?.value || '50_inicio',
+      detalle_pago:   v('detalle_pago'),
+      exclusiones:    v('exclusiones'),
+      codigo:         v('codigo') || 'PR.DEP.2025.XXXX',
+      revision:       v('revision') || 'Rev. N°1',
+      fecha:          v('fecha') || new Date().toLocaleDateString('es-CL'),
+      elaborado:      v('elaborado'),
+      revisado:       v('revisado') || 'Guillermo Sierra R.',
+    };
+  }
+
+  // ============================================================
+  // COPIAR TEXTO
+  // ============================================================
   function copiarTexto() {
     const text = document.getElementById('result-text').textContent;
     navigator.clipboard.writeText(text).then(() => {
@@ -991,6 +906,9 @@
     });
   }
 
+  // ============================================================
+  // RESETEAR FORMULARIO
+  // ============================================================
   function nuevaPropuesta() {
     document.querySelectorAll('input[type=text], textarea').forEach(el => el.value = '');
     document.querySelectorAll('.tag.on').forEach(el => el.classList.remove('on'));
@@ -1005,79 +923,12 @@
   }
 
   // ============================================================
-  // CONSTRUCCIÓN DEL PROMPT
-  // ============================================================
-  function buildPrompt() {
-    const materialidad = getTags('tags-materialidad').join(', ') || 'No especificada';
-    const condicion = getTags('tags-condicion').join(', ') || 'No especificada';
-    const actividades = getChecked();
-
-    const formaMap = {
-      '50_inicio':         '50% al momento de aceptar el servicio, 50% al entregar el informe',
-      '50_terreno':        '50% al término de los trabajos en terreno, 50% al entregar el informe de diagnóstico',
-      'estados_mensuales': 'Estados de pago mensuales según detalle',
-      'otro':              'Según detalle especificado'
-    };
-    const formaPago = formaMap[v('forma_pago')] + (v('detalle_pago') ? '. ' + v('detalle_pago') : '');
-
-    return `Eres un ingeniero estructural senior de IDIEM (Centro de Investigación, Desarrollo e Innovación de Estructuras y Materiales, Universidad de Chile). Redacta el borrador de una propuesta técnica y económica de diagnóstico estructural en español formal, con el tono técnico y profesional exacto de IDIEM.
-
-DATOS DEL PROYECTO:
-- Cliente / institución: ${v('cliente') || 'No indicado'}
-- Contacto: ${v('contacto') || 'No indicado'}
-- Edificio: ${v('edificio') || 'No indicado'}
-- Dirección: ${v('direccion') || 'No indicada'}
-- Superficie construida: ${v('superficie') || 'No indicada'} m²
-- Año de construcción: ${v('anio') || 'No indicado'}
-- Número de pisos: ${v('pisos') || 'No indicado'}
-- Materialidad: ${materialidad}
-- Condición especial: ${condicion}
-- Motivación del estudio: ${v('motivacion') || 'No indicada'}
-- Observaciones técnicas: ${v('obs_tecnicas') || 'Ninguna'}
-- Actividades incluidas: ${actividades.length ? actividades.map(a => '• ' + a).join('\n') : 'No especificadas'}
-- Plazo en terreno: ${v('plazo_terreno') || 'A definir'}
-- Plazo de gabinete: ${v('plazo_gabinete') || 'A definir'}
-- Plazo total: ${v('plazo_total') || 'A definir'}
-- Valor del servicio: UF ${v('precio_uf') || 'A definir'}
-- Forma de pago: ${formaPago}
-- Exclusiones específicas: ${v('exclusiones') || 'Ninguna adicional'}
-- Código de propuesta: ${v('codigo') || 'PR.DEP.2025.XXXX'}
-- Revisión: ${v('revision') || 'Rev. N°1'}
-- Fecha: ${v('fecha') || 'Pendiente'}
-- Elaborado por: ${v('elaborado') || 'Pendiente'}
-- Revisado por: ${v('revisado') || 'Guillermo Sierra R.'}
-
-INSTRUCCIONES:
-Redacta SOLO las secciones variables (no incluyas presentación institucional de IDIEM ni disposiciones generales). Las secciones son:
-
-1. ALCANCE
-Párrafo introductorio mencionando cliente y contacto. Descripción técnica del edificio (tipo estructura, materialidad, superficie, antigüedad, número de pisos, si está en uso o desocupado). Si tiene valor patrimonial o es Monumento Histórico, menciónalo. Listado numerado de actividades del estudio. Listado de antecedentes que debe proveer el mandante.
-
-2. PROPUESTA TÉCNICA
-Descripción técnica detallada de cada actividad seleccionada, en el orden lógico de ejecución. Menciona equipos y normas específicos: escáner Faro Focus 3D, martillo Schmidt, georradar/pacómetro, ETABS/SAP2000, NCh200, DS.61, etc. Si el edificio es patrimonial o Monumento Histórico, adapta el texto: sin ensayos destructivos en albañilería, permisos CMN a cargo del mandante, inspección visual detallada como alternativa. Cada actividad con su propio subtítulo numerado.
-
-3. PLAZOS
-Tabla con etapas y plazos. Notas estándar sobre dependencia del acceso del mandante y programación post-aceptación.
-
-4. PROPUESTA ECONÓMICA
-Valor en UF, exención de IVA según artículo 40 Ley N° 21.094 y Oficio N° 1.216 del SII. Forma de pago según lo indicado. Condición: crédito 30 días.
-
-5. RECURSOS PROPORCIONADOS POR EL MANDANTE
-Lista de lo que debe proveer el cliente (permisos, accesos, energía 220V, agua, andamios si aplica, retiro de cielos falsos si aplica).
-
-6. EXCLUSIONES DEL SERVICIO
-Lista combinando las estándar de IDIEM más las específicas indicadas. Estándar siempre: asesor en prevención de riesgos de IDIEM en terreno, reparaciones de zonas prospectadas, limpieza y retiro de escombros, elaboración de proyectos de intervención estructural.
-
-Usa un tono técnico formal, párrafos bien estructurados, sin lenguaje genérico. Adapta el contenido a la materialidad y condición específica del edificio.`;
-  }
-
-  // ============================================================
-  // GENERACIÓN DE PROPUESTA VÍA OLLAMA
+  // GENERAR PROPUESTA — llama al servidor Flask que usa Claude
   // ============================================================
   async function generarPropuesta() {
-    const cliente = v('cliente');
+    const cliente  = v('cliente');
     const edificio = v('edificio');
-    const precio = v('precio_uf');
+    const precio   = v('precio_uf');
 
     if (!cliente || !edificio) {
       const c = document.getElementById('error-container');
@@ -1092,24 +943,25 @@ Usa un tono técnico formal, párrafos bien estructurados, sin lenguaje genéric
     document.getElementById('error-wrap').style.display = 'none';
 
     const msgs = [
-      'Enviando prompt a Ollama...',
-      'El modelo está leyendo el contexto del proyecto...',
-      'Redactando alcance y propuesta técnica...',
-      'Generando secciones de plazos y precio...',
-      'Finalizando el borrador...'
+      'Enviando datos al servidor...',
+      'Claude está redactando el alcance...',
+      'Generando propuesta técnica...',
+      'Redactando plazos y propuesta económica...',
+      'Finalizando y rellenando el Word...'
     ];
     let mi = 0;
     const msgEl = document.getElementById('loading-msg');
     const interval = setInterval(() => {
       mi = (mi + 1) % msgs.length;
       msgEl.textContent = msgs[mi];
-    }, 4000);
+    }, 3000);
 
     try {
-      // PASO 1 — Pedir el prompt al servidor Flask
-      // El servidor lee prompts/diagnostico.txt, inserta los datos y lo devuelve
-      msgEl.textContent = 'Cargando prompt con ejemplos...';
-      const promptRes = await fetch(`${SERVER_URL}/construir-prompt`, {
+      msgEl.textContent = msgs[0];
+
+      // Un solo llamado al servidor — Claude genera + Word se rellena
+      // Cuando hagas deploy en DO, solo cambia SERVER_URL arriba
+      const response = await fetch(`${SERVER_URL}/generar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1118,59 +970,42 @@ Usa un tono técnico formal, párrafos bien estructurados, sin lenguaje genéric
         })
       });
 
-      if (!promptRes.ok) {
-        const err = await promptRes.json();
-        throw new Error('Error del servidor: ' + (err.error || promptRes.status));
-      }
-
-      const { prompt } = await promptRes.json();
-      msgEl.textContent = 'Enviando a Ollama...';
-
-      // PASO 2 — Enviar el prompt a Ollama
-      // Si en el futuro integras n8n, reemplaza este fetch por:
-      // fetch('http://localhost:5678/webhook/propuesta', ...)
-      const response = await fetch(`${OLLAMA_URL}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: OLLAMA_MODEL,
-          messages: [{ role: 'user', content: prompt }],
-          stream: false,
-          options: {
-            temperature: 0.2,   // Bajo = más consistente y formal
-            num_predict: 4096 //8192   // Más tokens para respuestas largas con few-shot
-          }
-        })
-      });
-
       clearInterval(interval);
 
       if (!response.ok) {
-        throw new Error(`Error HTTP ${response.status}: ${await response.text()}`);
+        const err = await response.json();
+        throw new Error(err.error || `Error ${response.status}`);
       }
 
-      const data = await response.json();
-      const texto = data.message?.content || data.response || 'Sin respuesta del modelo.';
+      // El servidor devuelve el Word directamente — descargarlo
+      const blob = await response.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      const edif = edificio.replace(/\s+/g, '_');
+      const cod  = (v('codigo') || 'PR_DEP_2025_XXXX').replace(/\./g, '_');
+      a.href     = url;
+      a.download = `${cod}_${edif}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
 
+      // Mostrar confirmación
       document.getElementById('result-edificio').textContent = edificio;
-      document.getElementById('result-codigo').textContent = v('codigo') || 'PR.DEP.2025.XXXX';
-      document.getElementById('result-text').textContent = texto;
-      document.getElementById('loading-wrap').style.display = 'none';
-      document.getElementById('result-wrap').style.display = 'block';
+      document.getElementById('result-codigo').textContent   = v('codigo') || 'PR.DEP.2025.XXXX';
+      document.getElementById('result-text').textContent     = '✓ Propuesta generada y descargada correctamente.\n\nRevisa el archivo Word descargado.';
+      document.getElementById('loading-wrap').style.display  = 'none';
+      document.getElementById('result-wrap').style.display   = 'block';
+      document.getElementById('btn-word').style.display      = 'none';
+      document.getElementById('btn-copy').style.display      = 'none';
 
     } catch (err) {
       clearInterval(interval);
       let msg = err.message;
       if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-        msg = `No se pudo conectar con Ollama en ${OLLAMA_URL}.\n\n` +
-              `Verifica que:\n` +
-              `1. Ollama esté corriendo (busca el ícono en la bandeja del sistema)\n` +
-              `2. El modelo esté descargado: abre PowerShell y ejecuta: ollama pull ${OLLAMA_MODEL}\n` +
-              `3. El archivo HTML esté abierto directamente en Chrome (no desde VS Code Live Server)`;
+        msg = 'No se pudo conectar con el servidor.\n\nVerifica que server.py esté corriendo: python server.py';
       }
-      document.getElementById('error-text').textContent = msg;
+      document.getElementById('error-text').textContent     = msg;
       document.getElementById('loading-wrap').style.display = 'none';
-      document.getElementById('error-wrap').style.display = 'block';
+      document.getElementById('error-wrap').style.display   = 'block';
     }
   }
 </script>
