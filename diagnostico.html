@@ -158,6 +158,29 @@
   .status-text { font-size: 11px; color: #666; }
   .status-model { font-family: var(--mono); font-size: 11px; color: #888; margin-top: 4px; }
 
+  .sidebar-service {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #2a2a2a;
+  }
+
+  .back-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #555;
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: #aaa; }
+
   /* --- Main --- */
   .main {
     padding: 3rem 3.5rem;
@@ -440,6 +463,9 @@
   <aside class="sidebar">
     <div class="sidebar-logo">id<span>ie</span>m</div>
     <div class="sidebar-sub">Generador de propuestas</div>
+    <div class="sidebar-service">Diagnóstico estructural</div>
+
+    <a href="index.html" class="back-link">← Volver al inicio</a>
 
     <div class="nav-label">Pasos</div>
     <nav class="nav-steps">
