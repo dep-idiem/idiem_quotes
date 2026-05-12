@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDIEM — Demo Evaluación por Incendio</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --bg-card: #ffffff;
+    --bg-input: #faf9f6;
+    --accent: #c41e1e;
+    --accent-soft: #f7e8e8;
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --text-faint: #a0a0a0;
+    --border: #e2dfd8;
+    --border-strong: #c8c4bc;
+    --success: #1a6b3c;
+    --success-bg: #e8f5ee;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    background: var(--text);
+    color: #fff;
+    padding: 2rem 1.5rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-logo { font-family: var(--mono); font-size: 22px; font-weight: 500; color: #fff; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .sidebar-logo span { color: var(--accent); }
+  .sidebar-sub { font-size: 11px; color: #888; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .sidebar-service { font-family: var(--mono); font-size: 10px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #2a2a2a; }
+  .back-link { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #555; text-decoration: none; margin-bottom: 1.5rem; transition: color 0.15s; }
+  .back-link:hover { color: #aaa; }
+  .nav-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #555; margin-bottom: 0.75rem; }
+  .nav-steps { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .nav-step { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: background 0.15s; border: none; background: transparent; color: #888; text-align: left; width: 100%; font-family: var(--sans); font-size: 13px; }
+  .nav-step:hover { background: rgba(255,255,255,0.06); color: #ccc; }
+  .nav-step.active { background: rgba(255,255,255,0.1); color: #fff; }
+  .nav-step.done { color: #aaa; }
+  .nav-step.done .step-num { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .nav-step.active .step-num { background: #fff; color: var(--text); border-color: #fff; }
+  .step-num { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #444; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; flex-shrink: 0; }
+  .sidebar-status { margin-top: auto; padding-top: 1.5rem; border-top: 1px solid #2a2a2a; }
+  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #444; margin-right: 6px; vertical-align: middle; }
+  .status-dot.online { background: #4caf50; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .status-text { font-size: 11px; color: #666; }
+  .status-model { font-family: var(--mono); font-size: 11px; color: #888; margin-top: 4px; }
+
+  .main { padding: 3rem 3.5rem; max-width: 780px; }
+  .step-panel { display: none; }
+  .step-panel.active { display: block; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+  .panel-header { margin-bottom: 2rem; }
+  .panel-eyebrow { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .panel-title { font-size: 24px; font-weight: 300; color: var(--text); letter-spacing: -0.3px; }
+  .panel-desc { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+  .section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); margin: 1.75rem 0 1rem; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .field { margin-bottom: 1.25rem; }
+  .field > label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 5px; }
+  .field input, .field select, .field textarea { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; font-family: var(--sans); font-size: 13px; color: var(--text); outline: none; transition: border-color 0.15s; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--border-strong); background: var(--bg-card); }
+  .field textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .field .hint { font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+  .tag-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { padding: 5px 12px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); cursor: pointer; color: var(--text-muted); background: var(--bg-input); transition: all 0.15s; user-select: none; }
+  .tag:hover { border-color: var(--border-strong); color: var(--text); }
+  .tag.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+
+  .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .check-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: var(--bg-input); transition: all 0.15s; }
+  .check-item:hover { border-color: var(--border-strong); }
+  .check-item.on { border-color: var(--accent); background: var(--accent-soft); }
+  .check-item input { display: none; }
+  .check-box { width: 14px; height: 14px; border: 1.5px solid var(--border-strong); border-radius: 3px; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .check-item.on .check-box { background: var(--accent); border-color: var(--accent); }
+  .check-item.on .check-box::after { content: ''; width: 8px; height: 5px; border-left: 1.5px solid #fff; border-bottom: 1.5px solid #fff; transform: rotate(-45deg) translateY(-1px); display: block; }
+  .check-label { font-size: 12px; color: var(--text); line-height: 1.4; }
+  .check-item.on .check-label { color: var(--accent); }
+
+  /* Alerta urgencia */
+  .urgency-banner {
+    background: #fff8e1;
+    border: 1px solid #f9a825;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #7a5800;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-row { display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .btn { padding: 9px 20px; border-radius: 6px; font-family: var(--sans); font-size: 13px; cursor: pointer; border: 1px solid var(--border-strong); background: transparent; color: var(--text-muted); transition: all 0.15s; }
+  .btn:hover { background: var(--border); color: var(--text); }
+  .btn-primary { background: var(--text); color: #fff; border-color: var(--text); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .btn-primary:hover { background: #333; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-ghost { border: none; background: none; font-size: 13px; color: var(--text-muted); cursor: pointer; padding: 9px 4px; }
+  .btn-ghost:hover { color: var(--text); }
+
+  .loading-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 2rem 0; }
+  .loading-bar-outer { width: 100%; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .loading-bar-inner { height: 100%; background: var(--accent); border-radius: 2px; animation: loading 1.8s ease-in-out infinite; width: 40%; }
+  @keyframes loading { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
+  .loading-msg { font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+  .error-box { background: #fff5f5; border: 1px solid #f5c0c0; border-radius: 6px; padding: 1rem 1.25rem; font-size: 13px; color: #a00; line-height: 1.5; }
+  .result-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .result-meta { font-size: 12px; color: var(--text-muted); }
+  .result-meta strong { color: var(--text); font-weight: 500; }
+  .btn-copy { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text-muted); transition: all 0.15s; font-family: var(--sans); }
+  .btn-copy:hover { border-color: var(--text); color: var(--text); }
+  .btn-copy.copied { background: var(--success-bg); border-color: var(--success); color: var(--success); }
+  .result-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; max-height: 560px; overflow-y: auto; }
+  .result-text { font-family: var(--sans); font-size: 13px; line-height: 1.8; color: var(--text); white-space: pre-wrap; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">id<span>ie</span>m</div>
+    <div class="sidebar-sub">Generador de propuestas</div>
+    <div class="sidebar-service">Evaluación por incendio</div>
+    <a href="index.html" class="back-link">← Volver al inicio</a>
+    <div class="nav-label">Pasos</div>
+    <nav class="nav-steps">
+      <button class="nav-step active" id="nav-1" onclick="goTo(1)"><span class="step-num">1</span> Cliente y estructura</button>
+      <button class="nav-step" id="nav-2" onclick="goTo(2)"><span class="step-num">2</span> Actividades</button>
+      <button class="nav-step" id="nav-3" onclick="goTo(3)"><span class="step-num">3</span> Plazos y precio</button>
+      <button class="nav-step" id="nav-4" onclick="goTo(4)"><span class="step-num">4</span> Resultado</button>
+    </nav>
+    <div class="sidebar-status">
+      <div><span class="status-dot online" id="status-dot"></span><span class="status-text" id="status-text">Modo demo</span></div>
+      <div class="status-model" id="status-model">Datos de ejemplo precargados</div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- PASO 1 — Cliente y estructura -->
+    <div class="step-panel active" id="panel-1">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Paso 1 / 3</div>
+        <div class="panel-title">Cliente y estructura</div>
+        <div class="panel-desc">Información del siniestro y la estructura afectada</div>
+      </div>
+
+      <div class="urgency-banner">
+        ⚡ Servicio urgente — los plazos de terreno son típicamente 3–5 días hábiles desde la aceptación
+      </div>
+
+      <div class="section-label">Datos del cliente</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Institución / cliente</label>
+          <input type="text" id="cliente" placeholder="Ej: JPV Asociados / Municipalidad de Santiago">
+        </div>
+        <div class="field">
+          <label>Nombre del contacto</label>
+          <input type="text" id="contacto" placeholder="Ej: Javier Leal Lobos">
+        </div>
+      </div>
+
+      <div class="section-label">Datos del siniestro</div>
+      <div class="field">
+        <label>Nombre del inmueble / estructura</label>
+        <input type="text" id="edificio" placeholder="Ej: Bodegas AKI KB Huechuraba / Galería Plaza de Armas">
+      </div>
+      <div class="field">
+        <label>Dirección</label>
+        <input type="text" id="direccion" placeholder="Ej: Av. Los Libertadores 6155, Huechuraba, Región Metropolitana">
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Fecha del incendio</label>
+          <input type="text" id="fecha_incendio" placeholder="Ej: 28 de diciembre de 2025">
+        </div>
+        <div class="field">
+          <label>Superficie afectada (m²)</label>
+          <input type="text" id="superficie" placeholder="Ej: 2400">
+        </div>
+      </div>
+
+      <div class="section-label">Materialidad de la estructura</div>
+      <div class="field">
+        <div class="tag-group" id="tags-materialidad">
+          <div class="tag" onclick="toggle(this)">Hormigón armado</div>
+          <div class="tag" onclick="toggle(this)">Albañilería confinada</div>
+          <div class="tag" onclick="toggle(this)">Albañilería de ladrillo</div>
+          <div class="tag" onclick="toggle(this)">Estructura metálica</div>
+          <div class="tag" onclick="toggle(this)">Mixta H.A. + albañilería</div>
+          <div class="tag" onclick="toggle(this)">Madera</div>
+        </div>
+      </div>
+
+      <div class="section-label">Uso de la estructura</div>
+      <div class="field">
+        <div class="tag-group" id="tags-uso">
+          <div class="tag" onclick="toggle(this)">Bodega / industria</div>
+          <div class="tag" onclick="toggle(this)">Comercio / galería</div>
+          <div class="tag" onclick="toggle(this)">Habitacional</div>
+          <div class="tag" onclick="toggle(this)">Equipamiento público</div>
+          <div class="tag" onclick="toggle(this)">Oficinas</div>
+          <div class="tag" onclick="toggle(this)">Patrimonio</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Descripción de la estructura y del siniestro</label>
+        <textarea id="descripcion_siniestro" placeholder="Ej: Bodega de albañilería confinada de un nivel, superficie ~2.400 m². El incendio afectó la zona central y el ala norte de la estructura, con daños severos en cubierta y moderados en muros perimetrales."></textarea>
+        <div class="hint">Describe brevemente la estructura y las zonas afectadas según lo que informa el cliente</div>
+      </div>
+
+      <div class="btn-row">
+        <div></div>
+        <button class="btn btn-primary" onclick="goTo(2)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- PASO 2 — Actividades -->
+    <div class="step-panel" id="panel-2">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Paso 2 / 3</div>
+        <div class="panel-title">Actividades del estudio</div>
+        <div class="panel-desc">Selecciona las actividades a realizar en terreno y oficina</div>
+      </div>
+
+      <div class="section-label">Actividades en terreno</div>
+      <div class="field">
+        <div class="check-grid">
+          <div class="check-item on" onclick="toggleCheck(this)">
+            <input type="checkbox" checked><div class="check-box"></div>
+            <span class="check-label">Inspección general y zonificación de intensidad del incendio</span>
+          </div>
+          <div class="check-item on" onclick="toggleCheck(this)">
+            <input type="checkbox" checked><div class="check-box"></div>
+            <span class="check-label">Levantamiento de daños y deformaciones por acción del fuego</span>
+          </div>
+          <div class="check-item on" onclick="toggleCheck(this)">
+            <input type="checkbox" checked><div class="check-box"></div>
+            <span class="check-label">Medición de verticalidad y desaplomes mediante escáner láser 3D</span>
+          </div>
+          <div class="check-item on" onclick="toggleCheck(this)">
+            <input type="checkbox" checked><div class="check-box"></div>
+            <span class="check-label">Ensayos de dureza superficial (martillo Schmidt)</span>
+          </div>
+          <div class="check-item on" onclick="toggleCheck(this)">
+            <input type="checkbox" checked><div class="check-box"></div>
+            <span class="check-label">Extracción y ensayo de testigos de hormigón</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox"><div class="check-box"></div>
+            <span class="check-label">Extracción y ensayo a tracción de barras de acero expuestas</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox"><div class="check-box"></div>
+            <span class="check-label">Inspección con dron (techumbre / zonas de difícil acceso)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Actividades en oficina</div>
+      <div class="field">
+        <div class="check-grid">
+          <div class="check-item on" onclick="toggleCheck(this)">
+            <input type="checkbox" checked><div class="check-box"></div>
+            <span class="check-label">Evaluación de daños por incendio y diagnóstico de recuperabilidad</span>
+          </div>
+          <div class="check-item on" onclick="toggleCheck(this)">
+            <input type="checkbox" checked><div class="check-box"></div>
+            <span class="check-label">Informe técnico final</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox"><div class="check-box"></div>
+            <span class="check-label">Informe preliminar de urgencia (3 días hábiles post-inspección)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Observaciones técnicas</div>
+      <div class="field">
+        <label>Condiciones especiales o restricciones de acceso</label>
+        <textarea id="obs_tecnicas" placeholder="Ej: Acceso restringido en zona norte por riesgo de colapso de cubierta. El mandante debe despejar y retirar escombros antes del inicio de los trabajos."></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="goTo(1)">← Volver</button>
+        <button class="btn btn-primary" onclick="goTo(3)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- PASO 3 — Plazos y precio -->
+    <div class="step-panel" id="panel-3">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Paso 3 / 3</div>
+        <div class="panel-title">Plazos y precio</div>
+        <div class="panel-desc">Condiciones económicas y administrativas</div>
+      </div>
+
+      <div class="section-label">Plazos</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Plazo en terreno</label>
+          <input type="text" id="plazo_terreno" placeholder="Ej: 3 días hábiles / 5 días hábiles">
+          <div class="hint">Desde la aceptación formal y despeje del área</div>
+        </div>
+        <div class="field">
+          <label>Plazo de elaboración del informe</label>
+          <input type="text" id="plazo_gabinete" placeholder="Ej: 12 días hábiles / 20 días hábiles">
+          <div class="hint">Contados desde el término de los trabajos en terreno</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Plazo informe preliminar (si aplica)</label>
+        <input type="text" id="plazo_preliminar" placeholder="Ej: 3 días hábiles posteriores a la inspección general">
+        <div class="hint">Solo si se incluye informe de urgencia</div>
+      </div>
+
+      <div class="section-label">Propuesta económica</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Valor del servicio (UF)</label>
+          <input type="text" id="precio_uf" placeholder="Ej: 350">
+        </div>
+        <div class="field">
+          <label>Forma de pago</label>
+          <select id="forma_pago">
+            <option value="100_entrega">100% a contra entrega del informe</option>
+            <option value="50_inicio">50% al inicio, 50% al entregar informe</option>
+            <option value="50_terreno">50% al término de terreno, 50% al entregar informe</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-label">Exclusiones específicas</div>
+      <div class="field">
+        <label>Exclusiones adicionales para esta propuesta</label>
+        <textarea id="exclusiones" placeholder="Ej: No incluye modelación o análisis estructural de la estructura. No incluye elaboración de proyecto de refuerzo."></textarea>
+        <div class="hint">Se agregan a las exclusiones estándar (asesor prevención riesgos, reparaciones, limpieza, proyecto de refuerzo)</div>
+      </div>
+
+      <div class="section-label">Identificación del documento</div>
+      <div class="grid-3">
+        <div class="field">
+          <label>Código de propuesta</label>
+          <input type="text" id="codigo" placeholder="Ej: PR.DEP.2025.0351">
+        </div>
+        <div class="field">
+          <label>Revisión</label>
+          <input type="text" id="revision" placeholder="Ej: Rev. N°0">
+        </div>
+        <div class="field">
+          <label>Fecha</label>
+          <input type="text" id="fecha" placeholder="Ej: 28-04-2026">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Elaborado por</label>
+          <input type="text" id="elaborado" placeholder="Ej: Pablo Herrera T.">
+        </div>
+        <div class="field">
+          <label>Revisado por</label>
+          <input type="text" id="revisado" placeholder="Ej: Guillermo Sierra R.">
+        </div>
+      </div>
+
+      <div id="error-container" style="margin-top:1rem;"></div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="goTo(2)">← Volver</button>
+        <button class="btn btn-primary" id="btn-generar" onclick="generarPropuesta()">Generar propuesta →</button>
+      </div>
+    </div>
+
+    <!-- PASO 4 — Resultado -->
+    <div class="step-panel" id="panel-4">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Resultado</div>
+        <div class="panel-title">Borrador generado</div>
+        <div class="panel-desc">Revisa el contenido y descarga el Word</div>
+      </div>
+      <div id="loading-wrap" class="loading-wrap">
+        <div class="loading-bar-outer"><div class="loading-bar-inner"></div></div>
+        <div class="loading-msg" id="loading-msg">Generando propuesta...</div>
+      </div>
+      <div id="result-wrap" style="display:none;">
+        <div class="result-toolbar">
+          <div class="result-meta">Propuesta para <strong id="result-edificio"></strong> — <span id="result-codigo" style="font-family:var(--mono);font-size:11px;"></span></div>
+          <button class="btn-copy" id="btn-copy" onclick="copiarTexto()">Copiar texto</button>
+        </div>
+        <div class="result-box"><div class="result-text" id="result-text"></div></div>
+        <div id="word-status" style="display:none;margin-top:1rem;font-size:12px;color:var(--text-muted);font-family:var(--mono);"></div>
+        <div class="btn-row">
+          <button class="btn-ghost" onclick="nuevaPropuesta()">← Nueva propuesta</button>
+          <div style="display:flex;gap:8px;">
+            <button class="btn" onclick="copiarTexto()">Copiar texto</button>
+            <button class="btn btn-primary" id="btn-word" onclick="descargarWordDemo()">Descargar Word →</button>
+          </div>
+        </div>
+      </div>
+      <div id="error-wrap" style="display:none;">
+        <div class="error-box" id="error-text"></div>
+        <div class="btn-row"><button class="btn" onclick="goTo(3)">← Volver e intentar</button></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // ============================================================
+  // MODO DEMO — sin servidor
+  // ============================================================
+  const DEMO_DOCX = 'demo/demo_incendios_galeria_plaza_armas.docx';
+
+  function goTo(n) {
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-step').forEach((s, i) => {
+      s.classList.remove('active', 'done');
+      if (i + 1 < n) s.classList.add('done');
+      if (i + 1 === n) s.classList.add('active');
+    });
+    document.getElementById(`panel-${n}`).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function toggle(el) { el.classList.toggle('on'); }
+  function toggleCheck(el) {
+    el.classList.toggle('on');
+    el.querySelector('input').checked = el.classList.contains('on');
+  }
+  function v(id) { return document.getElementById(id)?.value?.trim() || ''; }
+
+  function copiarTexto() {
+    navigator.clipboard.writeText(document.getElementById('result-text').textContent).then(() => {
+      const btn = document.getElementById('btn-copy');
+      btn.textContent = '¡Copiado!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copiar texto'; btn.classList.remove('copied'); }, 2500);
+    });
+  }
+
+  function descargarWordDemo() {
+    const edif = (v('edificio') || 'edificio').replace(/\s+/g, '_');
+    const cod  = (v('codigo')   || 'PR_DEP_2025_XXXX').replace(/\./g, '_');
+    const a = document.createElement('a');
+    a.href = DEMO_DOCX;
+    a.download = `${cod}_${edif}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function generarPropuesta() {
+    const cliente = v('cliente'), edificio = v('edificio');
+    if (!cliente || !edificio) {
+      document.getElementById('error-container').innerHTML = '<div class="error-box">Completa al menos el nombre del cliente y de la estructura.</div>';
+      return;
+    }
+    document.getElementById('error-container').innerHTML = '';
+
+    goTo(4);
+    document.getElementById('loading-wrap').style.display = 'flex';
+    document.getElementById('result-wrap').style.display = 'none';
+    document.getElementById('error-wrap').style.display = 'none';
+
+    const msgs = ['Cargando datos de la propuesta...', 'Redactando alcance...', 'Generando propuesta económica...', 'Finalizando documento Word...'];
+    let mi = 0;
+    const msgEl = document.getElementById('loading-msg');
+    msgEl.textContent = msgs[0];
+    const interval = setInterval(() => { mi = (mi+1)%msgs.length; msgEl.textContent = msgs[mi]; }, 600);
+
+    setTimeout(() => {
+      clearInterval(interval);
+
+      document.getElementById('loading-wrap').style.display = 'none';
+      document.getElementById('result-wrap').style.display = 'block';
+
+      document.getElementById('result-edificio').textContent = edificio;
+      document.getElementById('result-codigo').textContent = v('codigo') || 'PR.DEP.2025.XXXX';
+      document.getElementById('result-text').textContent =
+        `Propuesta generada correctamente para ${edificio}. Descargando documento Word...`;
+
+      descargarWordDemo();
+    }, 2500);
+  }
+
+  function nuevaPropuesta() {
+    document.querySelectorAll('input[type=text], textarea').forEach(el => el.value = '');
+    document.querySelectorAll('.tag.on').forEach(el => el.classList.remove('on'));
+    document.querySelectorAll('.check-item').forEach(el => {
+      const defaultOn = ['Inspección general','Levantamiento de daños','Medición de verticalidad','Ensayos de dureza','Extracción y ensayo de testigos de hormigón','Evaluación de daños','Informe técnico final'];
+      const label = el.querySelector('.check-label').textContent;
+      const shouldBeOn = defaultOn.some(d => label.includes(d.substring(0,20)));
+      el.classList.toggle('on', shouldBeOn);
+      el.querySelector('input').checked = shouldBeOn;
+    });
+    document.getElementById('loading-wrap').style.display = 'flex';
+    document.getElementById('result-wrap').style.display = 'none';
+    document.getElementById('error-wrap').style.display = 'none';
+    goTo(1);
+  }
+
+  // ============================================================
+  // PRECARGA DE DATOS DE EJEMPLO — Galería Plaza de Armas
+  // ============================================================
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('cliente').value          = 'Administración Galería Plaza de Armas';
+    document.getElementById('contacto').value         = 'Rodrigo Valenzuela';
+    document.getElementById('edificio').value         = 'Galería Plaza de Armas';
+    document.getElementById('direccion').value        = 'Portal Fernández Concha 960, Santiago Centro, RM';
+    document.getElementById('fecha_incendio').value   = '12 de febrero de 2025';
+    document.getElementById('superficie').value       = '2.800';
+    document.getElementById('descripcion_siniestro').value = 'Estructura de hormigón armado de tres niveles. El incendio afectó principalmente el segundo nivel y la techumbre del ala poniente, con daños en losas, vigas y muros perimetrales.';
+    document.getElementById('obs_tecnicas').value     = 'Acceso restringido en zonas de mayor daño por riesgo de colapso de cielos. El mandante debe despejar escombros antes del inicio.';
+    document.getElementById('plazo_terreno').value    = '2 días hábiles';
+    document.getElementById('plazo_gabinete').value   = '15 días hábiles';
+    document.getElementById('plazo_preliminar').value = '3 días hábiles post inspección';
+    document.getElementById('precio_uf').value        = '350';
+    document.getElementById('codigo').value           = 'PR.DEP.2025.0208';
+    document.getElementById('revision').value         = 'Rev. N°0';
+    document.getElementById('fecha').value            = '14-02-2025';
+    document.getElementById('elaborado').value        = 'Pablo Herrera T.';
+    document.getElementById('revisado').value         = 'Guillermo Sierra R.';
+    document.getElementById('exclusiones').value      = 'No incluye modelación estructural completa ni proyecto de reparación o refuerzo.';
+
+    // Seleccionar tags materialidad y uso
+    document.querySelectorAll('#tags-materialidad .tag').forEach(t => {
+      if (t.textContent.includes('Hormigón armado')) t.classList.add('on');
+    });
+    document.querySelectorAll('#tags-uso .tag').forEach(t => {
+      if (t.textContent.includes('Comercio')) t.classList.add('on');
+    });
+
+    // Forma de pago
+    document.getElementById('forma_pago').value = '100_entrega';
+  });
+</script>
+</body>
+</html>

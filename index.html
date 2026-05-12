@@ -403,7 +403,10 @@
           <span class="card-tag">Ensayos</span>
           <span class="card-tag">ETABS/SAP2000</span>
         </div>
-        <span class="card-arrow">→</span>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span class="demo-link" data-href="demo_diagnostico.html" style="font-size:11px; color: var(--accent); font-family: var(--mono); cursor:pointer;">Ver demo →</span>
+          <span class="card-arrow">→</span>
+        </div>
       </div>
     </a>
 
@@ -441,7 +444,10 @@
           <span class="card-tag">Escáner 3D</span>
           <span class="card-tag">Schmidt</span>
         </div>
-        <span class="card-arrow">→</span>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span class="demo-link" data-href="demo_incendios.html" style="font-size:11px; color: var(--accent); font-family: var(--mono); cursor:pointer;">Ver demo →</span>
+          <span class="card-arrow">→</span>
+        </div>
       </div>
     </a>
 
@@ -531,6 +537,16 @@
   }
 
   checkServer();
+
+  // Links "Ver demo →" — interceptan el click para no disparar la navegación
+  // de la tarjeta padre.
+  document.querySelectorAll('.demo-link').forEach(el => {
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = el.dataset.href;
+    });
+  });
 </script>
 </body>
 </html>
